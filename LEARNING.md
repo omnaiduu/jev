@@ -134,6 +134,8 @@ Training on `jev-distill-corpus` is a different experiment. Those labels are Jev
 
 Models prefer the first slot and the letter A. That habit is **position bias**. If `billing` is always option 1, the model can score well by picking slot 1.
 
+Phase 0 measured it. On 2,000 exam questions the untouched model picked letter A 47.9% of the time. The correct answer is in that slot only 26.9% of the time. Accuracy is 0.376, just above a random 0.318, because a first-slot habit is a weak judge. The habit lives in the weights. Reading the logits only reports it. Training is what changes the weights. The shuffle below is how the rows teach the word instead of the slot.
+
 A shuffled copy of the same fact:
 
 ```json
@@ -202,7 +204,7 @@ What the run showed, on the 2,000-question test split, thinking off, no temperat
 
 A coin-flip over the real option counts would score 0.318. So the untuned model is only a little above chance. It is also over-sure: the average confidence on its top letter is 0.742. ECE is that gap. We did not divide the logits by a temperature. The calibration pile does not exist yet, and fitting `T` on the exam would leak the test into the dial.
 
-It prefers the first slot. Letter `A` won 47.9% of questions. The gold label is in slot 0 only 26.9% of the time. That is the position bias the 30% train shuffle is meant to fight, and the reason Phase 4 flips the option order before trusting a higher accuracy.
+It prefers the first slot. Letter `A` won 47.9% of questions. The gold label is in slot 0 only 26.9% of the time. That gap is why this checkpoint needs training. The bias is in the weights, so a logit readout can see it and cannot remove it. Training on shuffled options moves the correct percentage with the words, so “always pick A” stops winning. Temperature only rescales confidence. The winning letter stays put. Phase 4 still flips the option order, to check the habit is actually gone.
 
 Two hundred yes/no items have no `criteria` text. The gold label is still `false` or `true`, so the prompt uses a fixed pair of descriptions. Leaving those rows out would have scored 1,800 questions and broken the 2,000-question gate.
 
