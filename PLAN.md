@@ -1,6 +1,6 @@
 # System One model plan
 
-Status: Phase 1 done. Phases 2–4 not started. This file is the handoff for a future agent. Do not start the next phase until asked. Do not skip ahead of the phase gates.
+Status: Phase 2 is the current step. The trainer is `phase2/modal_train.py`. The loss curve is not in yet. Phases 3–4 are not started. This file is the handoff for a future agent. Do not start the next phase until asked. Do not skip ahead of the phase gates.
 
 The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
 
@@ -115,9 +115,11 @@ The refund emails and support notes were written by `google/gemma-4-12B-it`. The
 
 ## Phase 2 — Train
 
-Unsloth loads E4B and attaches the LoRA (rank 16, language / attention / MLP only, vision and audio off). Do not use `SFTTrainer`. The PyTorch loss is the cross-entropy above. One pass over the train pile. Save the LoRA. Do not merge.
+Status: trainer written, run not finished. Code: `phase2/modal_train.py`.
 
-Gate: a checkpoint file exists and a short smoke batch shows the loss falling.
+Unsloth `FastVisionModel` loads `unsloth/gemma-4-E4B-it` in 16-bit (`load_in_4bit=False`, `load_in_16bit=True`) and attaches the LoRA (rank 16, alpha 16, language / attention / MLP only, vision off, audio off when the loader accepts that flag). Do not use `SFTTrainer`. The PyTorch loss is the letter cross-entropy above, at the last real token. One pass over the train pile, file order, batch 8, max length 2048, AdamW, lr `2e-4`, 100-step warmup, then cosine down to `0.1×` lr. Save the adapter with `save_pretrained`. Do not merge. The container is single-use.
+
+Gate: `adapter_config.json` exists, the saved files are the adapter (no base-model shard), and the loss is lower at the end of the epoch than at the start. The first 8 steps versus the next 8 are recorded too. If that short window is noisy, the epoch curve is the check. Do not claim the gate if the loss did not fall.
 
 ## Phase 3 — Temperature
 
