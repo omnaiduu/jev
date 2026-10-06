@@ -2,6 +2,8 @@
 
 Status: not started. This file is the handoff for a future agent. Do not skip ahead of the phase gates.
 
+The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
+
 Goal: a small judge. Given a situation and a closed list of answers, return a percentage for each answer. No generated paragraph.
 
 Model: `google/gemma-4-E4B-it` (Unsloth id `unsloth/gemma-4-E4B-it`). Text layers only. Leave vision and audio layers off. LoRA rank 16. E4B LoRA needs about 17 GB, so a Modal L40S or A10 is enough.
