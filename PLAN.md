@@ -74,6 +74,8 @@ Exam: `LocalLLaMA/typed-decisions`, config `all`, split `test` (400 cases, 2,000
 
 Run: Modal app `phase0-gemma-e4b-baseline` on an L40S. https://modal.com/apps/omnaidu42/main/ap-3HrXOJFdqf2uVCy827m8lw
 
+Latency was not recorded. The gate is accuracy, ECE, and Brier. The design cost is one prefill and no decode. See `LEARNING.md`.
+
 | slice | n | accuracy | ECE | Brier |
 |---|---|---|---|---|
 | all | 2000 | 0.376 | 0.366 | 0.905 |

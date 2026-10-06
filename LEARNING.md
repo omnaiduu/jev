@@ -188,6 +188,18 @@ Grading on the emails we generated would be grading the practice sheet. A model 
 
 The typed-decisions labels come from another model that only agrees with itself about 73.5% of the time. That number is the ceiling. A score a little above it means we fit that teacher’s quirks, not that we solved judging.
 
+## Latency
+
+A normal chat reply has two clocks. **Prefill** reads the prompt in one forward pass. **Decode** writes the answer one token at a time, and each token is another step. A paragraph is dozens of extra steps. That second clock is what people feel as waiting.
+
+This judge stops after prefill. The logits for A, B, C are the answer. Softmax over those few letters is free next to the forward pass. Decode never starts, so the reply has no length to wait on.
+
+The clock grows with the length of the state. A short email is cheap. A long agent trace is the slow part. The number of options barely matters.
+
+Training does not add a decode step. The same one pass still produces the percentages. The LoRA stays a separate file, so each text layer does one extra small multiply during that prefill. Temperature is a divide on a handful of logits after the pass.
+
+Phase 0 did not record milliseconds. It scored accuracy, ECE, and Brier on an L40S, batch of 8, one question per pass, prompts capped at 4,096 tokens. Those settings make a clean score. They are not a latency benchmark.
+
 ## Phase by phase, including the reason
 
 ### Phase 0 — Baseline
