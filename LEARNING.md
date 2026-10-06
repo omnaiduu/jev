@@ -220,7 +220,7 @@ What the run showed, on the 2,000-question test split, thinking off, no temperat
 |---|---|---|---|
 | plain E4B | 0.376 | 0.366 | 0.905 |
 
-A coin-flip over the real option counts would score 0.318. So the untuned model is only a little above chance. It is also over-sure: the average confidence on its top letter is 0.742. ECE is that gap. We did not divide the logits by a temperature. The calibration pile does not exist yet, and fitting `T` on the exam would leak the test into the dial.
+A coin-flip over the real option counts would score 0.318. So the untuned model is only a little above chance. It is also over-sure: the average confidence on its top letter is 0.742. ECE is that gap. Phase 0 did not divide the logits by a temperature. Fitting `T` on the exam would leak the test into the dial. The calibration pile now exists, and `T` is still unfitted.
 
 It prefers the first slot. Letter `A` won 47.9% of questions. The gold label is in slot 0 only 26.9% of the time. That gap is why this checkpoint needs training. The bias is in the weights, so a logit readout can see it and cannot remove it. Training on shuffled options moves the correct percentage with the words, so “always pick A” stops winning. Temperature only rescales confidence. The winning letter stays put. Phase 4 still flips the option order, to check the habit is actually gone.
 
@@ -231,6 +231,22 @@ Two hundred yes/no items have no `criteria` text. The gold label is still `false
 Rewrite BoolQ, MultiNLI, and Banking77 into rows. Add a smaller generated set only where those three have no label. Shuffle about 30% of option orders. Cut train, calibration, and test before any weight update.
 
 Reason: open labels teach general judgment. Generated rows teach rules nobody has labeled, with an answer key the script owns. The split keeps the exam honest.
+
+What the cut produced:
+
+| pile | rows |
+|---|---|
+| train | 40820 |
+| calibration | 4000 |
+| held out, SNLI only | 2000 |
+
+30% of the train rows, 12246 of them, had their options shuffled, and the 1.0 moved with the correct word. Calibration was not shuffled. typed-decisions is not in either file.
+
+Banking77 has 77 intents and no option list. Each row shows the true intent plus 19 others, in a random order. If the true intent were always first, the model could learn slot 0 again.
+
+SNLI uses the same three labels as MultiNLI and is stored only in `held_out.jsonl`. Phase 4 scores it because the model never trained on that source. The public exam stays the test pile and was not copied in.
+
+`google/gemma-4-12B-it` wrote the refund emails and the support notes. It is larger than E4B, and it never chose `target`. The script picked the team, or yes/no, before the writer ran. A row was kept only when the required phrase was actually in the text and the email did not name billing, tech, or sales.
 
 ### Phase 2 — Train
 

@@ -1,0 +1,40 @@
+{
+  "seed": 0,
+  "train_rows": 40820,
+  "calibration_rows": 4000,
+  "held_out_rows": 2000,
+  "train_by_source": {
+    "banking77": 9101,
+    "boolq": 8586,
+    "multinli": 20947,
+    "passage_answer": 729,
+    "refund_rule": 1457
+  },
+  "calibration_by_source": {
+    "banking77": 892,
+    "boolq": 841,
+    "multinli": 2053,
+    "passage_answer": 71,
+    "refund_rule": 143
+  },
+  "held_out_by_source": {
+    "snli": 2000
+  },
+  "train_shuffled_rows": 12246,
+  "train_shuffle_fraction": 0.3,
+  "typed_decisions_in_train": false,
+  "typed_decisions_in_calibration": false,
+  "held_out_source": "snli",
+  "held_out_in_train": false,
+  "held_out_in_calibration": false,
+  "test": {
+    "role": "public exam",
+    "source": "LocalLLaMA/typed-decisions",
+    "config": "all",
+    "split": "test",
+    "copied_into_phase1_files": false
+  },
+  "writer": "google/gemma-4-12B-it",
+  "writer_role": "Writes the refund email and the support note. The script writes target.",
+  "banking77_options": "Each row shows the true intent plus 19 other intents, in a random order, because Banking77 has no option order of its own."
+}

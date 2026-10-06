@@ -58,7 +58,8 @@ def main() -> None:
     _write(POOL_DIR / "boolq.jsonl", boolq_rows([dict(row) for row in boolq]))
 
     banking = load_dataset("mteb/banking77", split="train")
-    label_names = list(banking.features["label"].names)
+    by_id = {int(row["label"]): str(row["label_text"]) for row in banking}
+    label_names = [by_id[index] for index in range(len(by_id))]
     _write(
         POOL_DIR / "banking77.jsonl",
         banking_rows([dict(row) for row in banking], label_names, random.Random(0)),

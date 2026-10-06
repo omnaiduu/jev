@@ -1,6 +1,6 @@
 # System One model plan
 
-Status: Phase 0 done. Phases 1–4 not started. This file is the handoff for a future agent. Do not start the next phase until asked. Do not skip ahead of the phase gates.
+Status: Phase 1 done. Phases 2–4 not started. This file is the handoff for a future agent. Do not start the next phase until asked. Do not skip ahead of the phase gates.
 
 The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
 
@@ -100,9 +100,18 @@ Two schema facts the scorer had to handle:
 
 ## Phase 1 — Data
 
-Build the train, calibration, and test piles under the rules above. Save them as JSONL. Record source, split, and row counts.
+Status: done. Gate met. Files: `data/phase1/train.jsonl`, `data/phase1/calibration.jsonl`, `data/phase1/held_out.jsonl`, `data/phase1/manifest.json`.
 
-Gate: a manifest lists counts per source and confirms typed-decisions is absent from train and calibration.
+| pile | rows | role |
+|---|---|---|
+| train | 40820 | LoRA updates. 30% of these rows have shuffled options (12246). |
+| calibration | 4000 | fit `T` only. Not shuffled. |
+| held out | 2000 | SNLI only. Absent from train and calibration. Phase 4 scores this. |
+| test | public exam | `LocalLLaMA/typed-decisions` config `all` split `test`. Not copied into these files. |
+
+Train by source: Banking77 9101, BoolQ 8586, MultiNLI 20947, refund_rule 1457, passage_answer 729.
+
+The refund emails and support notes were written by `google/gemma-4-12B-it`. The script wrote `target`. The writer container was single-use and is stopped. SNLI is the source left entirely out of training. typed-decisions is absent from train and calibration.
 
 ## Phase 2 — Train
 
