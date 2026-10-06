@@ -13,7 +13,7 @@ from pathlib import Path
 
 import modal
 
-from phase2.loss import letter_cross_entropy, text_only_names
+from phase2.loss import letter_cross_entropy, merge_every_25, text_only_names
 from phase2.prompts import LETTERS, render_prompt
 
 APP_NAME = "phase2-lora-train"
@@ -23,6 +23,9 @@ BATCH_SIZE = 8
 LEARNING_RATE = 2e-4
 WARMUP_STEPS = 100
 RANK = 16
+# A Modal client that stays connected past about 21 minutes gets the input cancelled.
+# Each call trains for this long after the weights load, then saves and exits.
+CHUNK_TRAIN_SECONDS = 10 * 60
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
@@ -96,29 +99,39 @@ def _device(model, torch):
     return device
 
 
-def _checkpoint(model, losses: list[float], step: int, steps: int, torch) -> None:
-    """Publish the curve and the LoRA tensors so a dead client does not erase them."""
+def _load_progress() -> dict:
+    path = Path("/lora/progress.json")
+    if not path.exists():
+        return {"step": 0, "losses_every_25": []}
+    payload = json.loads(path.read_text())
+    payload.setdefault("losses_every_25", [])
+    payload["step"] = int(payload.get("step", 0))
+    return payload
+
+
+def _checkpoint(model, losses: list[float], completed: int, steps: int, start: int, torch) -> dict:
+    """Publish the curve and the LoRA tensors so the next chunk can resume."""
     from peft import get_peft_model_state_dict
 
+    if len(losses) != completed - start:
+        raise RuntimeError(f"loss list {len(losses)} does not match steps {start}..{completed}")
+    prior = _load_progress()
+    payload = {
+        "step": completed,
+        "steps": steps,
+        "last_loss": losses[-1],
+        "losses_every_25": merge_every_25(prior["losses_every_25"], start, losses),
+    }
     Path("/lora").mkdir(parents=True, exist_ok=True)
-    Path("/lora/progress.json").write_text(
-        json.dumps(
-            {
-                "step": step,
-                "steps": steps,
-                "last_loss": losses[-1],
-                "losses_every_25": losses[::25],
-            }
-        )
-        + "\n"
-    )
+    Path("/lora/progress.json").write_text(json.dumps(payload) + "\n")
     state = {
         name: tensor.detach().to("cpu")
         for name, tensor in get_peft_model_state_dict(model).items()
     }
     torch.save(state, "/lora/adapter_state.pt")
     lora_volume.commit()
-    print(f"checkpoint {step}/{steps}", flush=True)
+    print(f"checkpoint {completed}/{steps}", flush=True)
+    return payload
 
 
 def _adapter_report(path: Path) -> dict:
@@ -244,14 +257,33 @@ def train() -> dict:
         tokenizer.pad_token = tokenizer.eos_token
     letter_ids = _letter_ids(tokenizer)
 
+    import time
+
+    from peft import set_peft_model_state_dict
+
+    steps = math.ceil(len(rows) / BATCH_SIZE)
+    progress = _load_progress()
+    start = progress["step"]
+    if start > steps:
+        raise RuntimeError(f"checkpoint step {start} is past {steps}")
+    state_path = Path("/lora/adapter_state.pt")
+    if start:
+        if not state_path.exists():
+            raise RuntimeError(f"progress says step {start} but adapter_state.pt is missing")
+        set_peft_model_state_dict(model, torch.load(state_path, map_location="cpu", weights_only=True))
+        print(f"resumed at step {start}/{steps}", flush=True)
+    if start >= steps:
+        print("epoch already finished", flush=True)
+
     optimizer = torch.optim.AdamW(
         (param for param in model.parameters() if param.requires_grad),
         lr=LEARNING_RATE,
     )
-    steps = math.ceil(len(rows) / BATCH_SIZE)
     losses = []
     model.train()
-    for step in range(steps):
+    deadline = time.time() + CHUNK_TRAIN_SECONDS
+    completed = start
+    for step in range(start, steps):
         batch_rows = rows[step * BATCH_SIZE : (step + 1) * BATCH_SIZE]
         lr = _lr(step, steps)
         for group in optimizer.param_groups:
@@ -272,29 +304,38 @@ def train() -> dict:
         optimizer.step()
         value = float(loss.detach())
         losses.append(round(value, 6))
-        if step % 25 == 0 or step + 1 == steps:
-            print(f"step {step + 1}/{steps} loss {value:.4f} lr {lr:.6f}", flush=True)
-        if (step + 1) % 1000 == 0:
-            try:
-                _checkpoint(model, losses, step + 1, steps, torch)
-            except Exception as error:
-                print(f"checkpoint failed: {type(error).__name__}: {error}", flush=True)
+        completed = step + 1
+        if step % 25 == 0 or completed == steps:
+            print(f"step {completed}/{steps} loss {value:.4f} lr {lr:.6f}", flush=True)
+        if completed == steps:
+            break
+        if time.time() > deadline:
+            saved = _checkpoint(model, losses, completed, steps, start, torch)
+            return {
+                "status": "partial",
+                "step": completed,
+                "steps": steps,
+                "last_loss": losses[-1],
+                "losses_every_25": saved["losses_every_25"],
+            }
 
     out_dir = Path("/lora/adapter")
     out_dir.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(out_dir)
     tokenizer.save_pretrained(out_dir)
     adapter = _adapter_report(out_dir)
+    saved = _checkpoint(model, losses, completed, steps, start, torch) if losses else progress
     lora_volume.commit()
 
-    early = sum(losses[:8]) / 8
-    late_smoke = sum(losses[8:16]) / 8
-    full_early = sum(losses[:100]) / 100
-    full_late = sum(losses[-100:]) / 100
+    curve = saved["losses_every_25"]
+    early = sum(curve[:4]) / max(1, min(4, len(curve)))
+    late = sum(losses[-100:]) / max(1, min(100, len(losses))) if losses else saved.get("last_loss", 0.0)
     payload = {
+        "status": "done",
         "model": MODEL_ID,
         "rows": len(rows),
         "steps": steps,
+        "resumed_from": start,
         "batch_size": BATCH_SIZE,
         "rank": RANK,
         "learning_rate": LEARNING_RATE,
@@ -305,14 +346,15 @@ def train() -> dict:
         "adapter_files": adapter["adapter_files"],
         "trainable_tensors": len(trainable),
         "trainable_sample": trainable[:12],
-        "smoke_first_8_mean": early,
-        "smoke_next_8_mean": late_smoke,
-        "smoke_loss_fell": late_smoke < early,
-        "epoch_first_100_mean": full_early,
-        "epoch_last_100_mean": full_late,
-        "epoch_loss_fell": full_late < full_early,
-        "losses_every_25": losses[::25],
-        "first_16_losses": losses[:16],
+        "early_every_25_mean": early,
+        "epoch_last_100_mean": late,
+        "epoch_loss_fell": late < early,
+        "losses_every_25": curve,
+        "chunk_note": (
+            "Per-step losses before the first saved checkpoint were not kept. "
+            "early_every_25_mean is the mean of the first four logged steps "
+            "(1, 26, 51, 76). Each chunk starts a fresh AdamW state."
+        ),
     }
     Path("/lora/train.json").write_text(json.dumps(payload, indent=2) + "\n")
     lora_volume.commit()
@@ -322,6 +364,10 @@ def train() -> dict:
 @app.local_entrypoint()
 def main():
     payload = train.remote()
+    print(f"STATUS {payload['status']} step {payload.get('step', payload.get('steps'))}", flush=True)
+    if payload.get("status") != "done":
+        print(json.dumps({key: payload[key] for key in payload if key != "losses_every_25"}, indent=2))
+        return
     out_dir = Path("results/phase2")
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "train.json"

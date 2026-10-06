@@ -115,7 +115,7 @@ The refund emails and support notes were written by `google/gemma-4-12B-it`. The
 
 ## Phase 2 — Train
 
-Status: trainer written, run not finished. Code: `phase2/modal_train.py`.
+Status: in progress. A full client connection was cancelled at about 21 minutes, twice. Step 1000 is on the `phase2-lora` volume. Later calls resume from that file and stop after 10 minutes of updates so each call finishes. Code: `phase2/modal_train.py`.
 
 Unsloth `FastVisionModel` loads `unsloth/gemma-4-E4B-it` in 16-bit (`load_in_4bit=False`, `load_in_16bit=True`) and attaches the LoRA (rank 16, alpha 16, language / attention / MLP only, vision off, audio off when the loader accepts that flag). Do not use `SFTTrainer`. The PyTorch loss is the letter cross-entropy above, at the last real token. One pass over the train pile, file order, batch 8, max length 2048, AdamW, lr `2e-4`, 100-step warmup, then cosine down to `0.1×` lr. Save the adapter with `save_pretrained`. Do not merge. The container is single-use.
 

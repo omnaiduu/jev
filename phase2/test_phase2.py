@@ -1,4 +1,4 @@
-from phase2.loss import nll, text_only_names
+from phase2.loss import merge_every_25, nll, text_only_names
 from phase2.prompts import render_user_prompt
 
 
@@ -22,6 +22,14 @@ def test_loss_is_small_when_the_correct_letter_wins():
 
 def test_loss_is_large_when_the_correct_letter_loses():
     assert nll([0.0, 5.0], [1.0, 0.0]) > 4.0
+
+
+def test_every_25_curve_resumes_without_dropping_or_repeating():
+    prior = [float(index) for index in range(40)]
+    chunk = [1000.0 + index for index in range(50)]
+    merged = merge_every_25(prior, 1000, chunk)
+    assert merged[:40] == prior
+    assert merged[40:] == [1000.0, 1025.0]
 
 
 def test_text_only_rejects_a_vision_lora():

@@ -40,6 +40,13 @@ def letter_cross_entropy(
     return torch.stack(losses).mean()
 
 
+def merge_every_25(prior: list[float], start: int, chunk: list[float]) -> list[float]:
+    """Keep one loss every 25 global steps. `start` is the first global step in `chunk`."""
+    kept = list(prior[: start // 25])
+    kept.extend(value for index, value in enumerate(chunk) if (start + index) % 25 == 0)
+    return kept
+
+
 def text_only_names(names: list[str]) -> list[str]:
     banned = ("vision", "audio", "image", "projector")
     bad = [name for name in names if any(token in name.lower() for token in banned)]
