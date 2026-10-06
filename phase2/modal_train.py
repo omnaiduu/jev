@@ -96,6 +96,31 @@ def _device(model, torch):
     return device
 
 
+def _checkpoint(model, losses: list[float], step: int, steps: int, torch) -> None:
+    """Publish the curve and the LoRA tensors so a dead client does not erase them."""
+    from peft import get_peft_model_state_dict
+
+    Path("/lora").mkdir(parents=True, exist_ok=True)
+    Path("/lora/progress.json").write_text(
+        json.dumps(
+            {
+                "step": step,
+                "steps": steps,
+                "last_loss": losses[-1],
+                "losses_every_25": losses[::25],
+            }
+        )
+        + "\n"
+    )
+    state = {
+        name: tensor.detach().to("cpu")
+        for name, tensor in get_peft_model_state_dict(model).items()
+    }
+    torch.save(state, "/lora/adapter_state.pt")
+    lora_volume.commit()
+    print(f"checkpoint {step}/{steps}", flush=True)
+
+
 def _adapter_report(path: Path) -> dict:
     files = [item for item in path.rglob("*") if item.is_file()]
     names = sorted(item.name for item in files)
@@ -249,6 +274,11 @@ def train() -> dict:
         losses.append(round(value, 6))
         if step % 25 == 0 or step + 1 == steps:
             print(f"step {step + 1}/{steps} loss {value:.4f} lr {lr:.6f}", flush=True)
+        if (step + 1) % 1000 == 0:
+            try:
+                _checkpoint(model, losses, step + 1, steps, torch)
+            except Exception as error:
+                print(f"checkpoint failed: {type(error).__name__}: {error}", flush=True)
 
     out_dir = Path("/lora/adapter")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -261,7 +291,7 @@ def train() -> dict:
     late_smoke = sum(losses[8:16]) / 8
     full_early = sum(losses[:100]) / 100
     full_late = sum(losses[-100:]) / 100
-    return {
+    payload = {
         "model": MODEL_ID,
         "rows": len(rows),
         "steps": steps,
@@ -284,6 +314,9 @@ def train() -> dict:
         "losses_every_25": losses[::25],
         "first_16_losses": losses[:16],
     }
+    Path("/lora/train.json").write_text(json.dumps(payload, indent=2) + "\n")
+    lora_volume.commit()
+    return payload
 
 
 @app.local_entrypoint()
