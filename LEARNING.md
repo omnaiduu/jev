@@ -48,6 +48,8 @@ A **logit readout** means: run one forward pass, take the logits at the last pos
 
 Phase 0 is this readout on plain E4B, before any LoRA. Those numbers are the bar. If training does not beat them on the same exam, the LoRA did not help.
 
+The option token has to be one token. Gemma splits `human_review` into three pieces (`human`, `_`, `review`) and `harmful` into two (`harm`, `ful`). Those words have no single softmax slot. Phase 0 therefore binds each option to a letter, `A`, `B`, `C`, in the order the dataset lists them, and softmaxes the letter ids. The option id and its description stay in the prompt so the model still sees the words. `billing`, `true`, `false`, and the digits `0`–`3` are already one token, but the exam also contains the multi-token ids, so every question uses letters. Phase 4 has to use the same letters. Scoring the raw option-word logits would be a different exam.
+
 ## Why we train percentages instead of teaching the model to type a letter
 
 The usual Unsloth path is **SFT** (supervised fine-tuning). The loss checks “was the next word the right word?” You would train the model to type `billing` or the letter `A`.
@@ -188,9 +190,21 @@ The typed-decisions labels come from another model that only agrees with itself 
 
 ### Phase 0 — Baseline
 
-Load `google/gemma-4-E4B-it`. No LoRA. For each exam question, build the chat prompt, run one forward pass, logit-readout the option words, softmax. Save accuracy, ECE, and Brier.
+Load `google/gemma-4-E4B-it`. No LoRA. For each exam question, build the chat prompt, run one forward pass, softmax the letter logits. Save accuracy, ECE, and Brier.
 
 Reason: without this file, a later score has nothing to beat. Training can look successful while the plain model would have scored the same.
+
+What the run showed, on the 2,000-question test split, thinking off, no temperature:
+
+| | accuracy | ECE | Brier |
+|---|---|---|---|
+| plain E4B | 0.376 | 0.366 | 0.905 |
+
+A coin-flip over the real option counts would score 0.318. So the untuned model is only a little above chance. It is also over-sure: the average confidence on its top letter is 0.742. ECE is that gap. We did not divide the logits by a temperature. The calibration pile does not exist yet, and fitting `T` on the exam would leak the test into the dial.
+
+It prefers the first slot. Letter `A` won 47.9% of questions. The gold label is in slot 0 only 26.9% of the time. That is the position bias the 30% train shuffle is meant to fight, and the reason Phase 4 flips the option order before trusting a higher accuracy.
+
+Two hundred yes/no items have no `criteria` text. The gold label is still `false` or `true`, so the prompt uses a fixed pair of descriptions. Leaving those rows out would have scored 1,800 questions and broken the 2,000-question gate.
 
 ### Phase 1 — Data
 

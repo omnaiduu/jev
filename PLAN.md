@@ -1,6 +1,6 @@
 # System One model plan
 
-Status: not started. This file is the handoff for a future agent. Do not skip ahead of the phase gates.
+Status: Phase 0 done. Phases 1–4 not started. This file is the handoff for a future agent. Do not start the next phase until asked. Do not skip ahead of the phase gates.
 
 The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
 
@@ -64,11 +64,37 @@ Do not train on `LocalLLaMA/typed-decisions`. Do not use `jev-distill-corpus` as
 
 ## Phase 0 — Baseline
 
-Load E4B. Do not train. On every exam question, logit-readout the option words and softmax. Save accuracy, ECE, and Brier.
+Status: done. Gate met.
 
-Gate: these three numbers are written to disk. Later phases compare against them.
+Load E4B. Do not train. On every exam question, bind each option to one letter (`A`, `B`, `C`, ...) in dataset order, then softmax only those letter logits. No temperature (`T = 1`). Thinking off. One forward pass per question.
 
-Exam: `LocalLLaMA/typed-decisions` (400 cases, 2,000 questions). The labels agree with themselves about 73.5% of the time. That is the ceiling, not 95%.
+Gate: accuracy, ECE, and Brier are in `results/phase0/baseline.json`. Per-question rows are in `results/phase0/predictions.jsonl` (2,000 lines). Later phases compare against these three numbers, using this same letter readout.
+
+Exam: `LocalLLaMA/typed-decisions`, config `all`, split `test` (400 cases, 2,000 questions). The train split of that dataset was not scored and must stay out of training. The labels agree with themselves about 73.5% of the time. That is the ceiling, not 95%.
+
+Run: Modal app `phase0-gemma-e4b-baseline` on an L40S. https://modal.com/apps/omnaidu42/main/ap-3HrXOJFdqf2uVCy827m8lw
+
+| slice | n | accuracy | ECE | Brier |
+|---|---|---|---|---|
+| all | 2000 | 0.376 | 0.366 | 0.905 |
+| choice | 600 | 0.288 | 0.384 | 0.971 |
+| noul | 600 | 0.538 | 0.294 | 0.714 |
+| score | 800 | 0.320 | 0.407 | 0.999 |
+| agent_trace_observability | 500 | 0.394 | 0.318 | 0.873 |
+| customer_service | 500 | 0.288 | 0.490 | 1.101 |
+| invoice_processing | 500 | 0.416 | 0.318 | 0.838 |
+| security_incidents | 500 | 0.406 | 0.339 | 0.809 |
+
+Exact floats are in the JSON. Rounded here to three decimals.
+
+A uniform guess over the real option counts scores 0.318 (600 two-way questions, 1,100 four-way, 300 five-way). The readout is 0.058 above that. Mean confidence on the chosen letter is 0.742. That gap is the ECE: the model states about 74% while it is right 37.6% of the time. Temperature is not applied. Fitting it on this file would use the exam as the dial. That is Phase 3, on a calibration pile that does not exist yet.
+
+Position bias: letter `A` (slot 0) was the pick on 958 / 2,000 questions (47.9%). The gold label is slot 0 on 538 / 2,000 (26.9%). Picked vs gold by slot: 0 is 958 vs 538, 1 is 454 vs 585, 2 is 289 vs 493, 3 is 263 vs 330, 4 is 36 vs 54. Phase 4 must flip option order and score with the same letters. The train shuffle exists to fight this bias.
+
+Two schema facts the scorer had to handle:
+
+- 200 noul questions omit `criteria` (`invoice_processing` duplicate ×100, `security_incidents` credential_compromise ×100). Gold is still `false` or `true`. The prompt uses "The statement is not true." and "The statement is true."
+- Some option ids are more than one Gemma token (`human_review` is three, `harmful` is two). A softmax has one slot per option, so those ids cannot be the readout. Letters are. Do not switch Phase 4 to raw option-token logits without recording it as a different metric.
 
 ## Phase 1 — Data
 
