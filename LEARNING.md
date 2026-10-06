@@ -194,11 +194,17 @@ A normal chat reply has two clocks. **Prefill** reads the prompt in one forward 
 
 This judge stops after prefill. The logits for A, B, C are the answer. Softmax over those few letters is free next to the forward pass. Decode never starts, so the reply has no length to wait on.
 
-The clock grows with the length of the state. A short email is cheap. A long agent trace is the slow part. The number of options barely matters.
-
 Training does not add a decode step. The same one pass still produces the percentages. The LoRA stays a separate file, so each text layer does one extra small multiply during that prefill. Temperature is a divide on a handful of logits after the pass.
 
-Phase 0 did not record milliseconds. It scored accuracy, ECE, and Brier on an L40S, batch of 8, one question per pass, prompts capped at 4,096 tokens. Those settings make a clean score. They are not a latency benchmark.
+We timed it on an L40S, batch size 1, median of 3 runs, thinking off. Same exam prompts. The container was single-use and is stopped. Numbers are in `results/phase0/latency.json`.
+
+| prompt | input tokens | no decode | decode the letter | forced 32 new tokens |
+|---|---|---|---|---|
+| short yes/no | 176 | 65 ms | 131 ms | 1.94 s |
+| mid choice | 375 | 65 ms | 134 ms | 1.95 s |
+| longest in this exam | 685 | 78 ms | 144 ms | 2.10 s |
+
+No decode is one forward pass. Decoding the letter still does that prefill, then writes 2 tokens (the letter, then stop), so it takes about twice as long. Forcing 32 new tokens, a short paragraph, takes about 2 seconds. Each generated token costs about 60 ms. From 176 tokens to 685, the prefill only moved from 65 ms to 78 ms. At these lengths the wait is the decode, not the prompt.
 
 ## Phase by phase, including the reason
 

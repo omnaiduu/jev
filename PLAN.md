@@ -74,7 +74,7 @@ Exam: `LocalLLaMA/typed-decisions`, config `all`, split `test` (400 cases, 2,000
 
 Run: Modal app `phase0-gemma-e4b-baseline` on an L40S. https://modal.com/apps/omnaidu42/main/ap-3HrXOJFdqf2uVCy827m8lw
 
-Latency was not recorded. The gate is accuracy, ECE, and Brier. The design cost is one prefill and no decode. See `LEARNING.md`.
+Latency, separate from the gate, is in `results/phase0/latency.json`. On an L40S, one question: prefill about 65–78 ms, decoding the letter about 130–145 ms, a forced 32-token paragraph about 2 seconds. The container was single-use and is stopped. See `LEARNING.md`.
 
 | slice | n | accuracy | ECE | Brier |
 |---|---|---|---|---|
