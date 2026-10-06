@@ -28,6 +28,13 @@ image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install("torch", index_url="https://download.pytorch.org/whl/cu128")
     .pip_install("unsloth")
+    # Unsloth pulls a PyPI torchvision wheel. Its operators do not load next to cu128 torch.
+    .pip_install(
+        "torchvision==0.26.0",
+        "torchaudio==2.11.0",
+        extra_options="--force-reinstall --no-deps",
+        index_url="https://download.pytorch.org/whl/cu128",
+    )
     .add_local_python_source("phase2")
     .add_local_file("data/phase1/train.jsonl", remote_path="/data/train.jsonl")
 )
