@@ -27,6 +27,14 @@ def _item():
     }
 
 
+def test_left_pad_shortcut_is_the_first_content_token():
+    from phase4.score import last_content_index, phase0_index
+
+    mask = [0, 0, 1, 1, 1]
+    assert phase0_index(mask) == 2
+    assert last_content_index(mask) == 4
+
+
 def test_temperature_does_not_change_the_winner():
     logits = [2.0, 0.5, -1.0]
     assert winning_index(logits) == winning_index([value / 1.65 for value in logits])

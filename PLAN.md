@@ -1,6 +1,6 @@
 # System One model plan
 
-Status: Phase 4 done. Gate met. The LoRA stays. This file is the handoff for a future agent. Do not skip ahead of the phase gates.
+Status: Phase 4 done. Gate met. The LoRA stays. A plain-model re-score at the last content token is in progress. This file is the handoff for a future agent. Do not skip ahead of the phase gates.
 
 The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
 

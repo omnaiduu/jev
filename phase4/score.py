@@ -34,6 +34,22 @@ def temperatures_from_phase3(payload: dict) -> dict[str, float]:
     return found
 
 
+def phase0_index(mask: list[int]) -> int:
+    """Index Phase 0 used: count of content tokens, minus one."""
+    content = sum(mask)
+    if content <= 0:
+        raise ValueError("mask has no content token")
+    return content - 1
+
+
+def last_content_index(mask: list[int]) -> int:
+    """Last index whose attention mask is 1. That is the last real token."""
+    ones = [index for index, bit in enumerate(mask) if bit]
+    if not ones:
+        raise ValueError("mask has no content token")
+    return ones[-1]
+
+
 def temperature_for(question_type: str, temperatures: dict[str, float]) -> float:
     if question_type not in temperatures:
         raise ValueError(f"no temperature for question type {question_type}")
