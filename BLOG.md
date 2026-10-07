@@ -22,7 +22,7 @@ Use these as the through-line. Each one is something the runs actually showed.
 8. Shuffling about 30% of train rows moves the correct percentage with the word, so “always pick the first slot” stops being a shortcut.
 9. Train loss fell from 1.487 to a last-100-step mean of 0.246. That is the practice pile. It is a different measurement from the exam.
 10. Temperature changes how sure the percentages look. The winning letter stays put. Yes/no wanted 1.65. Multiple choice wanted 1.30. Score has no calibration rows, so it stays at 1.
-11. Calibration accuracy near 0.91 is the same kind of question as training. The exam, before any LoRA, was 0.376. With the LoRA, on that same index, it is 0.471, and ECE fell from 0.366 to 0.247. The ceiling on that exam is about 73.5%, because the labels agree with themselves about that often. The last real token on the LoRA pass scores 0.604, and Phase 0 has not been read at that token.
+11. Calibration accuracy near 0.91 is the same kind of question as training. The exam, before any LoRA, was 752 / 2,000 on `sum - 1`. With the first LoRA, on that same index, it is 941 / 2,000, and ECE fell from 0.366 to 0.247. The ceiling on that exam is about 73.5%, because the labels agree with themselves about that often. At the last content token the plain model is 1,289 / 2,000 and the first LoRA is 1,208 / 2,000. A second pass scored 899 / 2,000 on `sum - 1` and 1,264 / 2,000 at the last content token.
 
 ## Key insights
 
