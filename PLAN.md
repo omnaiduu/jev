@@ -1,6 +1,6 @@
 # System One model plan
 
-Status: Phase 2 is the current step. The trainer is `phase2/modal_train.py`. The loss curve is not in yet. Phases 3–4 are not started. This file is the handoff for a future agent. Do not start the next phase until asked. Do not skip ahead of the phase gates.
+Status: Phase 2 done. Gate met. Phases 3–4 are not started. This file is the handoff for a future agent. Do not start the next phase until asked. Do not skip ahead of the phase gates.
 
 The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
 
@@ -115,11 +115,15 @@ The refund emails and support notes were written by `google/gemma-4-12B-it`. The
 
 ## Phase 2 — Train
 
-Status: in progress. A full client connection was cancelled at about 21 minutes, twice. Step 1000 is on the `phase2-lora` volume. Later calls resume from that file and stop after 10 minutes of updates so each call finishes. Code: `phase2/modal_train.py`.
+Status: done. Gate met. Curve: `results/phase2/train.json`. LoRA config: `results/phase2/adapter_config.json`. Weights: Modal volume `phase2-lora`, path `adapter/`. The container is stopped.
 
-Unsloth `FastVisionModel` loads `unsloth/gemma-4-E4B-it` in 16-bit (`load_in_4bit=False`, `load_in_16bit=True`) and attaches the LoRA (rank 16, alpha 16, language / attention / MLP only, vision off, audio off when the loader accepts that flag). Do not use `SFTTrainer`. The PyTorch loss is the letter cross-entropy above, at the last real token. One pass over the train pile, file order, batch 8, max length 2048, AdamW, lr `2e-4`, 100-step warmup, then cosine down to `0.1×` lr. Save the adapter with `save_pretrained`. Do not merge. The container is single-use.
+Unsloth `FastVisionModel` loaded `unsloth/gemma-4-E4B-it` in 16-bit and attached a rank-16 LoRA. 588 trainable tensors, all under `language_model` attention and MLP. No vision, audio, image, or projector tensor was trainable. One pass, 40820 rows, 5103 steps, batch 8, max length 2048. Letter cross-entropy at the last real token. `SFTTrainer` was not used. The saved file is a PEFT LoRA (`peft_type: LORA`), not a merged base model.
 
-Gate: `adapter_config.json` exists, the saved files are the adapter (no base-model shard), and the loss is lower at the end of the epoch than at the start. The first 8 steps versus the next 8 are recorded too. If that short window is noisy, the epoch curve is the check. Do not claim the gate if the loss did not fall.
+The loss fell. The mean of the logged losses at steps 1, 26, 51, and 76 is 0.975. The mean of the last 100 steps is 0.246. Step 1 was 1.487.
+
+A client left connected for about 21 minutes had its input cancelled, so the epoch was finished in 10-minute chunks that resumed from the volume. Each chunk started a fresh AdamW state. The learning-rate schedule still followed the global step. `adapter_model.safetensors` is 140 MB, over GitHub's 100 MB file limit, so the weights stay on the volume.
+
+Gate: `adapter_config.json` exists, the saved tensors are the adapter, and the loss is lower at the end than at the start. This does not say the exam improved. That check is Phase 4.
 
 ## Phase 3 — Temperature
 

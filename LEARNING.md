@@ -254,6 +254,18 @@ Unsloth loads E4B and attaches a rank-16 LoRA on the text layers. Vision and aud
 
 Reason: SFT would teach the model to type a word. Cross-entropy teaches the percentage list. The separate LoRA file keeps normal Gemma intact.
 
+The run finished. 5103 steps, batch 8. The loss at step 1 was 1.487. The mean of the logged losses at steps 1, 26, 51, and 76 was 0.975. The mean of the last 100 steps was 0.246. That drop is the gate. It is the training pile, so it does not say the exam got better.
+
+Our loss is only over the option letters. A confused 2-way question sits near `log(2) ≈ 0.69`. A confused 20-way question sits near `log(20) ≈ 3.0`. Unsloth's note that Gemma 4 E4B often shows a loss of 13–15 is about a softmax over the whole vocabulary. That number is not the one this loop prints.
+
+588 tensors were trainable: 42 layers, and in each layer the query, key, value, output, gate, up, and down projections, each with a LoRA A and a LoRA B. `42 × 7 × 2 = 588`. Every name starts with `language_model`. None contain vision, audio, image, or projector.
+
+The PyPI torchvision wheel does not load its operators next to the cu128 torch build. The image installs Unsloth, then reinstalls `torchvision==0.26.0` and `torchaudio==2.11.0` from the cu128 wheel index.
+
+A Modal client that stayed connected for about 21 minutes had the GPU input cancelled. The epoch was cut into calls of 10 minutes of updates. Each call wrote the LoRA state to the volume `phase2-lora` and the next call loaded it. Each call also started a new AdamW state, so the running average of past gradients was dropped at the chunk boundary. The learning rate still followed the global step. The loss still fell across the full epoch.
+
+`adapter_model.safetensors` is 140 MB. GitHub rejects a file over 100 MB, so the weights stay on that volume at `adapter/`. The repo keeps `results/phase2/train.json` and `results/phase2/adapter_config.json`. The config says `peft_type: LORA` and `base_model_name_or_path: unsloth/gemma-4-E4B-it`. The base weights were not written out.
+
 ### Phase 3 — Temperature
 
 Freeze the LoRA. Fit one `T` per question type on the calibration pile only.
