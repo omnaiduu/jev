@@ -167,6 +167,10 @@ Option order was reversed and the letters were rebound. The chosen option id cha
 
 SNLI, 2,000 rows never used in training, training prompt, right padding, choice temperature 1.30: accuracy 0.910, ECE 0.013, Brier 0.134. That score is the same three-way label set as MultiNLI. It is not the typed-decisions exam, and it does not enter the keep boolean.
 
+## Suggested next measurement
+
+Not started. Re-score plain E4B on the same 2,000 exam prompts, reading the last real token. Phase 4’s last-real-token accuracy is 0.604, and Phase 0 was read at `mask.sum() - 1` because the tokenizer left-pads. Until the plain model is read at the last real token, 0.604 has no baseline. On that pass, also keep per-type numbers, the slot histogram, and the reversed-option count for the adapter. Do not train. Do not merge. The position habit and the missing score rows are later questions.
+
 ## Out of scope for v1
 
 - Merging the LoRA into Gemma.

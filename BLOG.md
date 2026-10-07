@@ -24,6 +24,40 @@ Use these as the through-line. Each one is something the runs actually showed.
 10. Temperature changes how sure the percentages look. The winning letter stays put. Yes/no wanted 1.65. Multiple choice wanted 1.30. Score has no calibration rows, so it stays at 1.
 11. Calibration accuracy near 0.91 is the same kind of question as training. The exam, before any LoRA, was 0.376. With the LoRA, on that same index, it is 0.471, and ECE fell from 0.366 to 0.247. The ceiling on that exam is about 73.5%, because the labels agree with themselves about that often. The last real token on the LoRA pass scores 0.604, and Phase 0 has not been read at that token.
 
+## Key insights
+
+These are the lines worth building the post around. Each one is already measured.
+
+**The product is the percentage list.** A situation and a closed set of answers go in. A percentage per answer comes out. Code can threshold it. The model stops before it writes a paragraph.
+
+**The slot has to be one token.** `human_review` is three Gemma tokens and `harmful` is two. A softmax has one slot per answer, so every question is bound to `A`, `B`, `C` in dataset order. The words stay in the prompt. Training prints `A. billing`. The exam prints `A. continue: Let the agent proceed`. The exam comparison keeps the exam wording.
+
+**Plain E4B is a weak, over-sure judge with a first-slot habit.** On 2,000 exam questions, accuracy is 0.376. A uniform guess over the real option counts is 0.318. Mean confidence on the top letter is 0.742, so it talks like it is right about three times in four and is right a bit over one time in three. It picks the first letter 958 times (47.9%). The correct answer is there 538 times (26.9%). The habit is in the weights. Reading the logits reports it.
+
+**The wait is the decode.** On an L40S, one forward pass is 65–78 ms at these prompt lengths. Writing the letter is about 130–145 ms. A forced 32-token paragraph is about 2 seconds, roughly 60 ms per generated token. The judge never starts that second clock.
+
+**Open labels teach the skill. A script owns the answer key.** BoolQ, MultiNLI, and Banking77 are the bulk: 40,820 train rows. About 30% of them (12,246) had the option order shuffled, and the correct percentage moved with the word. Refund emails and passage notes were written by Gemma 4 12B. The script picked `target` before the writer ran. The exam, typed-decisions, was never copied into training. Its labels agree with themselves about 73.5% of the time. That is the ceiling.
+
+**Letter cross-entropy is a small number on purpose.** The loss is only over the option letters. Step 1 was 1.487. The last 100 steps averaged 0.246. A confused yes/no sits near `log(2) ≈ 0.69`. A confused 20-way question sits near `log(20) ≈ 3.0`. A full-vocabulary loss of 13–15, which shows up in Unsloth’s notes for this model, is a different softmax. Unsloth loaded the model and attached the rank-16 LoRA. The PyTorch loop applied the loss. The saved file is a separate 140 MB adapter. A falling train loss means the practice pile moved. The exam is the other file.
+
+**Temperature changes the stated percentage. The winner stays put.** `softmax(logits / T)`. The fit used 4,000 calibration rows the weights never saw, and none of the exam. Yes/no landed at 1.65. Multiple choice landed at 1.30. Both are above 1, so on that pile the model was a bit too sure. Score has no calibration rows, so score stays at 1. Calibration accuracy near 0.91 is BoolQ, MultiNLI, Banking77, and the small generated sets. Same family as training.
+
+**On the shared exam index, the adapter is worth keeping.** Accuracy 0.376 to 0.471. ECE 0.366 to 0.247. Brier 0.905 to 0.737. Multiple choice did the work, 0.288 to 0.518. Yes/no was already the strong slice and stayed at 0.540. Score, absent from training, moved from 0.320 to 0.383. 0.471 is under the 73.5% ceiling, so this is not a clone of the exam’s teacher.
+
+**Left padding splits the headline in two.** Shorter questions in a batch have blank tokens on the left. `mask.sum() - 1` lands in that blank region. The last real token is at the right edge. Those two positions choose different option ids on 824 of 2,000 questions. The last real token on the adapter pass scores accuracy 0.604, ECE 0.162, Brier 0.550. Publish 0.471 as the comparison with Phase 0, because Phase 0 used the same index. Publish 0.604 only with the sentence that Phase 0 has not been read at the last real token.
+
+**The first-slot habit shrank and did not leave.** Reversing the option list changed the chosen option id on 1,254 of 2,000 questions (62.7%). Slot A still gets 762 picks against 538 gold labels. Phase 0 put 958 picks there. Temperature cannot fix this. Dividing every logit by the same number leaves the winner in place.
+
+**SNLI is transfer of a label set the model already trained on.** 2,000 rows, never in the train file, same three labels as MultiNLI. Accuracy 0.910, ECE 0.013, on the training prompt with right padding. That sentence belongs next to the exam number, with a clear label. It does not decide whether the adapter stays.
+
+## What I would do next
+
+Re-read plain E4B at the last real token, on the same 2,000 exam prompts, with no adapter and no training. Then the 0.604 figure has a baseline. On that same pass, keep per-type accuracy, the slot histogram, and the reversed-option count for the adapter too. The current file only has the adapter’s overall last-token score.
+
+Write the post after that pair exists. The shared-index move from 0.376 to 0.471 can be the comparison today. The last-token number wants its own Phase 0 read before it is the headline.
+
+Leave the adapter unmerged. Do not start another training epoch until that read is in. The position habit is the training question that comes after the index is clean. Score questions are a data gap: the train pile has no 1-to-5 rows, which is why that slice barely moved.
+
 ## What the post can say now
 
 The method, the stack, the Phase 0 exam, the latency, the data cut, the training curve, the calibration temperatures, and the Phase 4 exam.
@@ -72,6 +106,8 @@ This is the same shape as a small judge: yes/no, a label from a list, or a score
 A token is one piece of text the model knows as one id. A logit is the raw score for a token at one position. Softmax turns a few logits into percentages that are positive and sum to 1.
 
 The readout is one forward pass. Take the logits at the last real token. Keep the option slots. Softmax those. Decode never starts.
+
+Phase 0 and the published Phase 4 comparison did not quite do that. The Gemma tokenizer pads on the left, and both runs read `mask.sum() - 1`. On a left-padded row the real text is flush right, so that index misses the last real token except on the longest row in the batch. The notes below keep both numbers.
 
 The slot has to be one token. Gemma splits `human_review` into three pieces and `harmful` into two. Those strings have no single softmax slot. Every question therefore binds options to `A`, `B`, `C`, in the order the row lists them, and the softmax is over the letter ids. The option id and its description stay in the prompt, so the model still sees the words.
 
