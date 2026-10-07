@@ -44,7 +44,7 @@ These are the lines worth building the post around. Each one is already measured
 
 **On the shared exam index, the adapter is worth keeping.** Accuracy 0.376 to 0.471. ECE 0.366 to 0.247. Brier 0.905 to 0.737. Multiple choice did the work, 0.288 to 0.518. Yes/no was already the strong slice and stayed at 0.540. Score, absent from training, moved from 0.320 to 0.383. 0.471 is under the 73.5% ceiling, so this is not a clone of the exam’s teacher.
 
-**Left padding splits the headline in two.** Shorter questions in a batch have blank tokens on the left. `mask.sum() - 1` lands in that blank region. The last real token is at the right edge. Those two positions choose different option ids on 824 of 2,000 questions. The last real token on the adapter pass scores accuracy 0.604, ECE 0.162, Brier 0.550. Publish 0.471 as the comparison with Phase 0, because Phase 0 used the same index. Publish 0.604 only with the sentence that Phase 0 has not been read at the last real token.
+**Left padding splits the headline in two.** Shorter questions in a batch have blank tokens on the left. `mask.sum() - 1` lands on the first content token. The last content token is the last index where the mask is 1. Those two positions choose different option ids on 824 of 2,000 questions for the LoRA, and on 1,228 of 2,000 for the plain model. Publish 752 to 941 as the training comparison, because both used `sum - 1`. At the last content token the plain model scores 1,289 of 2,000 and the LoRA scores 1,208 of 2,000. Those two forwards used different stacks (transformers 5.18.0 versus Unsloth), so 1,289 versus 1,208 is not a pure training delta.
 
 **The first-slot habit shrank and did not leave.** Reversing the option list changed the chosen option id on 1,254 of 2,000 questions (62.7%). Slot A still gets 762 picks against 538 gold labels. Phase 0 put 958 picks there. Temperature cannot fix this. Dividing every logit by the same number leaves the winner in place.
 
@@ -52,26 +52,26 @@ These are the lines worth building the post around. Each one is already measured
 
 ## Number to report
 
-The readout index was wrong. Gemma left-pads. `attention_mask.sum() - 1` is the first content token on a short row. The last content token is the last index where the mask is 1. Those indexes pick different letters on 824 of 2,000 exam questions.
+The readout index was wrong. Gemma left-pads. Picture a short row as `PAD PAD t1 t2 t3`. `attention_mask.sum() - 1` lands on `t1`. The last content token is `t3`. Those indexes pick different letters on 824 of 2,000 LoRA questions and on 1,228 of 2,000 plain-model questions.
 
-Report the training delta on one index. Both Phase 0 and Phase 4 stored `sum - 1`:
+Report the training delta on one index. Both Phase 0 and Phase 4 stored `sum - 1`. The plain re-score reproduced 752 exactly (`shortcut_matches_phase0` is true):
 
 | | correct |
 |---|---|
-| plain model, before | 752 / 2,000 |
-| LoRA, after | 941 / 2,000 |
+| plain model, `sum - 1` | 752 / 2,000 |
+| LoRA, `sum - 1` | 941 / 2,000 |
 
-The LoRA at the last content token is 1,208 / 2,000. That count has no plain-model pair. The plain model was never forwarded at that index. Publishing 752 to 1,208 mixes the index fix with the training. Option 1 is the plain-model forward at the last content token, so 1,208 gets a before.
+The same plain forward, read at the last content token, is 1,289 / 2,000. Per type: choice 379 / 600, yes/no 433 / 600, score 477 / 800. Workflows: agent trace 258 / 500, customer service 375 / 500, invoice 323 / 500, security 333 / 500. ECE 0.2624814863356488, Brier 0.5983526449027284. No LoRA, temperature 1, the Phase 0 prompt, transformers 5.18.0.
+
+The LoRA at the last content token, from the Phase 4 Unsloth forward, is 1,208 / 2,000. At the right token the untouched model is ahead by 81 questions. At the shared wrong index the LoRA is ahead by 189 questions (941 − 752). Do not publish 752 to 1,289, or 752 to 1,208, as the training effect. Those mix the index fix with training, and the last-token pair also mixes two stacks.
 
 ## What I would do next
 
-Re-read plain E4B at the last real token, on the same 2,000 exam prompts, with no adapter and no training. Then the 0.604 figure has a baseline. On that same pass, keep per-type accuracy, the slot histogram, and the reversed-option count for the adapter too. The current file only has the adapter’s overall last-token score.
+The plain-model read at the last content token is in: 1,289 / 2,000, file `results/phase4/plain_last.json`. The shared-index move from 752 / 2,000 to 941 / 2,000 stays the training comparison. The last-token pair is plain 1,289 versus LoRA 1,208, with the stack caveat above.
 
-Write the post after that pair exists. The shared-index move from 0.376 to 0.471 can be the comparison today. The last-token number wants its own Phase 0 read before it is the headline.
+A second train is the remaining gap. The first train file has no ordered-score rows. Slot 0 is still over-picked. The second pass uses 2,186 score rows (refund severity from a phrase in the email, passage counts from listed facts) plus 4,000 fully reshuffled choice rows from MultiNLI and Banking77. BoolQ and the exam stay out. Learning rate 2e-5, one pass, saved as a new adapter file so the first adapter is not overwritten. Score that adapter on the exam before claiming a new count.
 
-A second train is worth it for two gaps. The train file has no ordered-score rows, and that exam slice moved from 256 / 800 to 306 / 800. Slot 0 is still over-picked, 762 picks against 538 gold labels, and a reversed list changes the pick on 1,254 / 2,000. New score rows, and a shuffle rate above the 30 percent already used, are the data for that run.
-
-Another epoch on the same 40,820 rows is not. Letter loss already fell from 1.487 to about 0.25. More BoolQ yes/no is not either: exam yes/no went from 323 / 600 to 324 / 600. Leave the adapter unmerged until the plain-model read at the last content token is in.
+Another epoch on the same 40,820 rows is not. Letter loss already fell from 1.487 to about 0.25. More BoolQ yes/no is not either: exam yes/no went from 323 / 600 to 324 / 600 on the shared index. Leave both adapters unmerged.
 
 ## What the post can say now
 
@@ -79,7 +79,7 @@ The method, the stack, the Phase 0 exam, the latency, the data cut, the training
 
 The exam comparison uses the same index as Phase 0. On that index the LoRA is accuracy 0.471, ECE 0.247, Brier 0.737, against Phase 0 at 0.376, 0.366, and 0.905. The gate keeps the LoRA. Choice carried the gain (0.288 to 0.518). Yes/no stayed near 0.54. Score, absent from training, moved from 0.320 to 0.383.
 
-Say the left-padding caveat next to those numbers. The tokenizer left-pads, and Phase 0 reads `mask.sum() - 1`. On the LoRA pass that position is not the last real token for 824 of 2,000 questions. The last real token on the same pass scores accuracy 0.604, ECE 0.162, Brier 0.550. Phase 0 was not re-run at that token, so 0.604 is not the comparison.
+Say the left-padding caveat next to those numbers. The tokenizer left-pads, and Phase 0 reads `mask.sum() - 1`. On the LoRA pass that position is the first content token for 824 of 2,000 questions. The last content token on the same pass scores 1,208 / 2,000. A plain re-score reproduces 752 at `sum - 1` and scores 1,289 / 2,000 at the last content token. 1,208 is not the comparison with 752.
 
 The reversed option list changed the chosen id on 1,254 of 2,000 questions. Slot 0 is still over-picked: 762 picks, 538 gold labels. Phase 0 picked slot 0 on 958 questions.
 
@@ -267,7 +267,7 @@ Same 2,000 questions as Phase 0. Same letter prompt. `softmax(logits / T)` with 
 
 Accuracy went up and ECE went down. 0.471 is under the 73.5% ceiling. The gain is concentrated in multiple choice, 0.288 to 0.518. Yes/no was already 0.538 and landed at 0.540. Score was not in the training pile and moved from 0.320 to 0.383.
 
-The tokenizer left-pads. Both Phase 0 and this run read `mask.sum() - 1`. For a shorter row in the batch, the last real token sits at the right edge, and that index does not point there. The two positions pick different option ids on 824 questions. The last real token on this LoRA pass scores accuracy 0.604, ECE 0.162, Brier 0.550. Publish 0.471 as the comparison with Phase 0. Publish 0.604 as the same forward pass read at the last real token, and say Phase 0 has not been read that way.
+The tokenizer left-pads. Both Phase 0 and this run read `mask.sum() - 1`. For a shorter row in the batch that index is the first content token. The two positions pick different option ids on 824 questions for the LoRA. The last content token on this LoRA pass scores 1,208 / 2,000 (accuracy 0.604, ECE 0.162, Brier 0.550). A later plain-model forward, same exam prompts, no adapter, temperature 1, reproduces 752 at `sum - 1` and scores 1,289 / 2,000 at the last content token. Publish 752 to 941 as the training comparison. Publish 1,289 and 1,208 as the last-token pair, and say the stacks differ.
 
 Reversing the options changed the chosen id 62.7% of the time (1,254 / 2,000). Slot 0 got 762 picks against 538 gold labels. The plain model put 958 picks there. The habit is smaller. It is still in the weights.
 
@@ -275,7 +275,7 @@ SNLI was left out of training. Accuracy 0.910, ECE 0.013, on the training prompt
 
 ## 9. Close
 
-The plain model is a weak judge with a first-slot habit, and it is over-sure. One forward pass is enough to read the percentages, and it is much shorter than writing them out. The LoRA moved the exam from 0.376 to 0.471 on the shared index, and the stated percentages got closer to the hit rate. The adapter is still a separate file. The first-slot habit shrank and did not disappear. A last-real-token read of this LoRA is 0.604, and the matching Phase 0 read has not been run.
+The plain model at the old index is a weak judge with a first-slot habit, and it is over-sure. Read at the last content token, the same plain model gets 1,289 of 2,000. One forward pass is enough to read the percentages, and it is much shorter than writing them out. The LoRA moved the exam from 752 to 941 on the shared index, and the stated percentages got closer to the hit rate. The adapter is still a separate file. The first-slot habit shrank and did not disappear. At the last content token the LoRA is 1,208 of 2,000, which is below the plain model’s 1,289 on a different stack.
 
 ## Numbers to keep exact
 
@@ -286,6 +286,7 @@ Rounded in the prose above. Exact floats:
 - Phase 2: step 1 loss 1.486908, early mean of steps 1, 26, 51, 76 = 0.97460325, last-100 mean 0.24618104. The saved adapter directory is 179,090,427 bytes. The weights file inside it is about 140 MB.
 - Latency medians: short 64.5 / 130.7 / 1944.7 ms, mid 65.4 / 134.0 / 1954.8 ms, longest 77.6 / 143.5 / 2101.6 ms. Those three clocks are one forward pass, decoding the letter, and a forced 32 new tokens.
 - Phase 3: yes/no `T = 1.65`, NLL 0.26683733964031514 → 0.22779646590519353, ECE 0.054589416184109084 → 0.014922792529572435. Choice `T = 1.3`, NLL 0.2304244724952239 → 0.21622760975523075, ECE 0.03188975182841046 → 0.009062708872826912.
-- Phase 4, same index as Phase 0: accuracy 0.4705, ECE 0.24664896169448602, Brier 0.7370409524588989. Last real token on that pass: accuracy 0.604, ECE 0.16193150770165962, Brier 0.5501747421983022. Index disagreement: 824 / 2000. Flip changes: 1254 / 2000. SNLI: accuracy 0.91, ECE 0.012526768167657777, Brier 0.13375256693900067.
+- Phase 4, same index as Phase 0: accuracy 0.4705 (941 / 2000), ECE 0.24664896169448602, Brier 0.7370409524588989. Last content token on that pass: accuracy 0.604 (1208 / 2000), ECE 0.16193150770165962, Brier 0.5501747421983022. Index disagreement: 824 / 2000. Flip changes: 1254 / 2000. SNLI: accuracy 0.91, ECE 0.012526768167657777, Brier 0.13375256693900067.
+- Plain model re-score, `results/phase4/plain_last.json`: `sum - 1` is 752 / 2000 and matches Phase 0. Last content token is 1289 / 2000, ECE 0.2624814863356488, Brier 0.5983526449027284. Per type at the last content token: choice 379 / 600, noul 433 / 600, score 477 / 800. Index disagreement: 1228 / 2000. Padding side left. No LoRA. Temperature 1.
 
 Files: `results/phase0/baseline.json`, `results/phase2/train.json`, `results/phase3/temperature.json`. The reasons for each design choice are in `LEARNING.md`.

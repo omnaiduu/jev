@@ -304,7 +304,9 @@ On the same index Phase 0 used:
 
 Choice moved from 0.288 to 0.518. Yes/no stayed near 0.54 (0.538 to 0.540). Score, which was not in the train pile, moved from 0.320 to 0.383. Accuracy is up and ECE is down, so the gate keeps the LoRA. 0.471 is under the 73.5% ceiling.
 
-The Gemma tokenizer left-pads. Phase 0 takes the logits at `mask.sum() - 1`. For a left-padded row that index is not the last real token, except on the longest row in the batch. On this LoRA pass the two positions disagree for 824 of 2,000 questions. Reading the last real token instead scores accuracy 0.604, ECE 0.162, Brier 0.550. That is a different index from Phase 0, so it is not the gate. Phase 0 was not run again at the last real token.
+The Gemma tokenizer left-pads. Phase 0 takes the logits at `mask.sum() - 1`. For a left-padded row that index is the first content token, except on the longest row in the batch, which has no pad. On the LoRA pass the two positions disagree for 824 of 2,000 questions. Reading the last content token instead scores 1,208 / 2,000 (accuracy 0.604, ECE 0.162, Brier 0.550). That is a different index from Phase 0, so it is not the gate.
+
+A later plain-model forward uses the Phase 0 stack (transformers 5.18.0, no LoRA, temperature 1). `sum - 1` matches the stored baseline: 752 / 2,000. The last content token on that forward is 1,289 / 2,000 (choice 379 / 600, yes/no 433 / 600, score 477 / 800). The two indexes disagree on 1,228 of 2,000. At the right token the untouched model is ahead of the LoRA’s 1,208. The stacks differ, so that gap is not a pure training delta. The training comparison that shares an index remains 752 to 941.
 
 Reversing the option list changed the chosen option id on 1,254 of 2,000 questions. Slot 0 is still the most common pick, 762 times, against a gold count of 538. Phase 0 picked it 958 times. The habit shrank and did not leave.
 

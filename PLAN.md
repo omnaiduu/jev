@@ -1,6 +1,6 @@
 # System One model plan
 
-Status: Phase 4 done. Gate met. The LoRA stays. A plain-model re-score at the last content token is in progress. This file is the handoff for a future agent. Do not skip ahead of the phase gates.
+Status: Phase 4 done. Gate met on the shared index (752 to 941 of 2,000). The plain model at the last content token is 1,289 of 2,000. The LoRA at that token is 1,208 of 2,000 on the Unsloth stack. A second training pass (score rows plus a full shuffle) is the current run. This file is the handoff for a future agent. Do not skip ahead of the phase gates.
 
 The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
 
@@ -169,7 +169,15 @@ SNLI, 2,000 rows never used in training, training prompt, right padding, choice 
 
 ## Suggested next measurement
 
-Not started. Re-score plain E4B on the same 2,000 exam prompts, reading the last real token. Phase 4’s last-real-token accuracy is 0.604, and Phase 0 was read at `mask.sum() - 1` because the tokenizer left-pads. Until the plain model is read at the last real token, 0.604 has no baseline. On that pass, also keep per-type numbers, the slot histogram, and the reversed-option count for the adapter. Do not train. Do not merge. The position habit and the missing score rows are later questions.
+Done. Plain `google/gemma-4-E4B-it`, no LoRA, temperature 1, the Phase 0 prompt, transformers 5.18.0, batch 8. File `results/phase4/plain_last.json`.
+
+`mask.sum() - 1` reproduces Phase 0: 752 / 2,000, ECE 0.3658742327145903, Brier 0.9052791643922966. `shortcut_matches_phase0` is true. Padding side is left.
+
+The last content token on that same forward is 1,289 / 2,000. Choice 379 / 600, yes/no 433 / 600, score 477 / 800. ECE 0.2624814863356488, Brier 0.5983526449027284. The two indexes disagree on 1,228 of 2,000 questions.
+
+Phase 4’s LoRA, read at the last content token on the Unsloth stack with Phase 3 temperatures, is 1,208 / 2,000. At the right token the plain model is ahead. At the shared wrong index the LoRA is ahead (941 versus 752). Do not publish 752 to 1,289 as the training effect.
+
+The second pass is the follow-up: 2,186 ordered-score rows and 4,000 fully reshuffled choice rows, learning rate 2e-5, saved to `/lora/adapter-pass2`. The first adapter at `/lora/adapter` stays. Score the new adapter on the exam at both indexes before writing a new headline. Do not merge. Do not train on the exam. Do not refit temperature on the exam.
 
 ## Out of scope for v1
 
