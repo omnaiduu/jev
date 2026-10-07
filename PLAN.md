@@ -1,6 +1,6 @@
 # System One model plan
 
-Status: Phase 3 done. Gate met. Phase 4 is not started. This file is the handoff for a future agent. Do not start the next phase until asked. Do not skip ahead of the phase gates.
+Status: Phase 4 in progress. Phases 0–3 are done. This file is the handoff for a future agent. Do not skip ahead of the phase gates.
 
 The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
 
@@ -144,12 +144,11 @@ Gate: the JSON exists, and it was not fit on the train pile, SNLI, or typed-deci
 
 ## Phase 4 — Exam
 
-Score the LoRA on typed-decisions with `softmax(logits / T)`. Report accuracy, ECE, and Brier next to the Phase 0 numbers. Also:
+Status: in progress. The LoRA stays frozen. Score `LocalLLaMA/typed-decisions` config `all` split `test` (2,000 questions) with the Phase 0 letter prompt (`A. id: text`) and the Phase 0 tokenizer padding call. Softmax is `softmax(logits / T)` with the Phase 3 temperatures: noul 1.65, choice 1.30, score 1. Score has no calibration rows, so it stays at 1.
 
-- Flip option order and count how often the chosen option changes.
-- Score one source that was left entirely out of training.
+Also reverse each option list, rebind the letters, and count how often the chosen option id changes. Score the 2,000 SNLI rows in `data/phase1/held_out.jsonl` with the training prompt (`A. {option}`) and right padding, at the choice temperature 1.30.
 
-Keep the LoRA only if accuracy is higher than Phase 0 and ECE is lower. A score a little above the 73.5% ceiling means the model fit the teacher’s quirks.
+Gate: accuracy higher than Phase 0 and ECE lower, on this exam. SNLI is reported beside the gate. It does not enter the boolean. A score a little above the 73.5% ceiling means the model fit the teacher’s quirks.
 
 ## Out of scope for v1
 
