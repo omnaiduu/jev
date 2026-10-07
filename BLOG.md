@@ -65,13 +65,22 @@ The same plain forward, read at the last content token, is 1,289 / 2,000. Per ty
 
 The LoRA at the last content token, from the Phase 4 Unsloth forward, is 1,208 / 2,000. At the right token the untouched model is ahead by 81 questions. At the shared wrong index the LoRA is ahead by 189 questions (941 − 752). Do not publish 752 to 1,289, or 752 to 1,208, as the training effect. Those mix the index fix with training, and the last-token pair also mixes two stacks.
 
+## Second pass
+
+One more update of the same add-on file. The homework was 2,186 ordered-score rows (a refund phrase in the email maps to none / low / medium / high; a passage asks how many of four listed facts are in the note) plus 4,000 choice rows from MultiNLI and Banking77 with every option list reshuffled. BoolQ and the exam stayed out. Learning rate 2e-5, 774 steps, saved as `/lora/adapter-pass2`. The first adapter was not overwritten.
+
+| readout | plain | first LoRA | second pass |
+|---|---|---|---|
+| `sum - 1` | 752 / 2,000 | 941 / 2,000 | 899 / 2,000 |
+| last content token | 1,289 / 2,000 | 1,208 / 2,000 | 1,264 / 2,000 |
+
+The second pass did not beat the first adapter on the shared index: 941 down to 899, ECE 0.247 up to 0.299. At the last content token it moved 1,208 to 1,264 and is still under the plain model’s 1,289. Score questions, the slice this pass was built for, are 297 / 800 at `sum - 1` (first LoRA 306 / 800, plain 256 / 800) and 472 / 800 at the last content token (plain 477 / 800). Keep the first adapter as the published file.
+
 ## What I would do next
 
-The plain-model read at the last content token is in: 1,289 / 2,000, file `results/phase4/plain_last.json`. The shared-index move from 752 / 2,000 to 941 / 2,000 stays the training comparison. The last-token pair is plain 1,289 versus LoRA 1,208, with the stack caveat above.
+Both measurements are in. The number to publish as the training comparison stays 752 / 2,000 to 941 / 2,000 on `sum - 1`. The last-content pair is plain 1,289 versus first LoRA 1,208, and the second pass landed at 1,264. The score homework did not lift the score slice past the plain model at the right token (477 / 800 plain, 472 / 800 second pass).
 
-A second train is the remaining gap. The first train file has no ordered-score rows. Slot 0 is still over-picked. The second pass uses 2,186 score rows (refund severity from a phrase in the email, passage counts from listed facts) plus 4,000 fully reshuffled choice rows from MultiNLI and Banking77. BoolQ and the exam stay out. Learning rate 2e-5, one pass, saved as a new adapter file so the first adapter is not overwritten. Score that adapter on the exam before claiming a new count.
-
-Another epoch on the same 40,820 rows is not. Letter loss already fell from 1.487 to about 0.25. More BoolQ yes/no is not either: exam yes/no went from 323 / 600 to 324 / 600 on the shared index. Leave both adapters unmerged.
+Another epoch on the same 40,820 rows is not the next move. More BoolQ is not either. Leave both adapters unmerged. Do not train on the exam.
 
 ## What the post can say now
 
@@ -275,7 +284,7 @@ SNLI was left out of training. Accuracy 0.910, ECE 0.013, on the training prompt
 
 ## 9. Close
 
-The plain model at the old index is a weak judge with a first-slot habit, and it is over-sure. Read at the last content token, the same plain model gets 1,289 of 2,000. One forward pass is enough to read the percentages, and it is much shorter than writing them out. The LoRA moved the exam from 752 to 941 on the shared index, and the stated percentages got closer to the hit rate. The adapter is still a separate file. The first-slot habit shrank and did not disappear. At the last content token the LoRA is 1,208 of 2,000, which is below the plain model’s 1,289 on a different stack.
+The plain model at the old index is a weak judge with a first-slot habit, and it is over-sure. Read at the last content token, the same plain model gets 1,289 of 2,000. One forward pass is enough to read the percentages, and it is much shorter than writing them out. The first LoRA moved the exam from 752 to 941 on the shared index. A second pass aimed at score questions and option order landed at 899 on that index and 1,264 at the last content token. The first adapter stays the published file. Both adapters stay unmerged.
 
 ## Numbers to keep exact
 
@@ -288,5 +297,6 @@ Rounded in the prose above. Exact floats:
 - Phase 3: yes/no `T = 1.65`, NLL 0.26683733964031514 → 0.22779646590519353, ECE 0.054589416184109084 → 0.014922792529572435. Choice `T = 1.3`, NLL 0.2304244724952239 → 0.21622760975523075, ECE 0.03188975182841046 → 0.009062708872826912.
 - Phase 4, same index as Phase 0: accuracy 0.4705 (941 / 2000), ECE 0.24664896169448602, Brier 0.7370409524588989. Last content token on that pass: accuracy 0.604 (1208 / 2000), ECE 0.16193150770165962, Brier 0.5501747421983022. Index disagreement: 824 / 2000. Flip changes: 1254 / 2000. SNLI: accuracy 0.91, ECE 0.012526768167657777, Brier 0.13375256693900067.
 - Plain model re-score, `results/phase4/plain_last.json`: `sum - 1` is 752 / 2000 and matches Phase 0. Last content token is 1289 / 2000, ECE 0.2624814863356488, Brier 0.5983526449027284. Per type at the last content token: choice 379 / 600, noul 433 / 600, score 477 / 800. Index disagreement: 1228 / 2000. Padding side left. No LoRA. Temperature 1.
+- Second pass, `results/phase5/exam.json`, adapter-pass2, Phase 3 temperatures: `sum - 1` is 899 / 2000, ECE 0.2988679516317932, Brier 0.7840461950157366. Per type: choice 281 / 600, noul 321 / 600, score 297 / 800. Last content token is 1264 / 2000, ECE 0.252364327823452, Brier 0.601706332312328. Per type: choice 401 / 600, noul 391 / 600, score 472 / 800. Train file `results/phase5/train.json`: 6186 rows, 774 steps, learning rate 2e-5, resumed from step 722, epoch last-100 mean loss 0.145758, merged false, phase-2 adapter not overwritten.
 
 Files: `results/phase0/baseline.json`, `results/phase2/train.json`, `results/phase3/temperature.json`. The reasons for each design choice are in `LEARNING.md`.

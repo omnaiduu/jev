@@ -1,6 +1,6 @@
 # System One model plan
 
-Status: Phase 4 done. Gate met on the shared index (752 to 941 of 2,000). The plain model at the last content token is 1,289 of 2,000. The LoRA at that token is 1,208 of 2,000 on the Unsloth stack. A second training pass (score rows plus a full shuffle) is the current run. This file is the handoff for a future agent. Do not skip ahead of the phase gates.
+Status: Phase 4 done. Gate met on the shared index (752 to 941 of 2,000). The plain model at the last content token is 1,289 of 2,000. The first LoRA at that token is 1,208 of 2,000. A second pass scored 899 of 2,000 on the shared index and 1,264 of 2,000 at the last content token. The first adapter stays. This file is the handoff for a future agent. Do not skip ahead of the phase gates.
 
 The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
 
@@ -177,7 +177,13 @@ The last content token on that same forward is 1,289 / 2,000. Choice 379 / 600, 
 
 Phase 4’s LoRA, read at the last content token on the Unsloth stack with Phase 3 temperatures, is 1,208 / 2,000. At the right token the plain model is ahead. At the shared wrong index the LoRA is ahead (941 versus 752). Do not publish 752 to 1,289 as the training effect.
 
-The second pass is the follow-up: 2,186 ordered-score rows and 4,000 fully reshuffled choice rows, learning rate 2e-5, saved to `/lora/adapter-pass2`. The first adapter at `/lora/adapter` stays. Score the new adapter on the exam at both indexes before writing a new headline. Do not merge. Do not train on the exam. Do not refit temperature on the exam.
+The second pass has been scored. Data: 2,186 ordered-score rows and 4,000 fully reshuffled choice rows, learning rate 2e-5, 774 steps, saved to `/lora/adapter-pass2`. The first adapter at `/lora/adapter` was not overwritten. Exam file `results/phase5/exam.json`.
+
+`sum - 1`: 899 / 2,000. Choice 281 / 600, yes/no 321 / 600, score 297 / 800. ECE 0.2988679516317932. That is below the first LoRA’s 941 and above the plain model’s 752.
+
+Last content token: 1,264 / 2,000. Choice 401 / 600, yes/no 391 / 600, score 472 / 800. ECE 0.252364327823452. That is above the first LoRA’s 1,208 and below the plain model’s 1,289. Score at this token is 472 / 800 against the plain model’s 477 / 800.
+
+The published comparison remains 752 to 941 on the shared index. Do not merge. Do not train on the exam. Do not refit temperature on the exam. Do not start another pass until asked.
 
 ## Out of scope for v1
 

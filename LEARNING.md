@@ -308,6 +308,12 @@ The Gemma tokenizer left-pads. Phase 0 takes the logits at `mask.sum() - 1`. For
 
 A later plain-model forward uses the Phase 0 stack (transformers 5.18.0, no LoRA, temperature 1). `sum - 1` matches the stored baseline: 752 / 2,000. The last content token on that forward is 1,289 / 2,000 (choice 379 / 600, yes/no 433 / 600, score 477 / 800). The two indexes disagree on 1,228 of 2,000. At the right token the untouched model is ahead of the LoRA’s 1,208. The stacks differ, so that gap is not a pure training delta. The training comparison that shares an index remains 752 to 941.
 
+### Second pass
+
+The first train file had no ordered-score rows, and slot 0 was still over-picked. A second pass kept the first adapter and wrote a new one. Homework: 2,186 score rows whose label is a visible cue (a phrase in the refund email, or a count of listed facts), plus 4,000 MultiNLI and Banking77 rows with the option order fully shuffled. BoolQ and the exam were excluded. Learning rate 2e-5, one pass, 774 steps. Letter loss on the logged steps fell, and the phase-2 adapter file was not overwritten.
+
+The exam did not follow the train loss. On `sum - 1` the new adapter scores 899 / 2,000, under the first adapter’s 941, with ECE 0.299 against 0.247. At the last content token it scores 1,264 / 2,000, above the first adapter’s 1,208 and under the plain model’s 1,289. The score slice is 297 / 800 at `sum - 1` (first adapter 306) and 472 / 800 at the last content token (plain model 477). Easy cues in the homework did not move the exam’s score questions. The first adapter stays the published file.
+
 Reversing the option list changed the chosen option id on 1,254 of 2,000 questions. Slot 0 is still the most common pick, 762 times, against a gold count of 538. Phase 0 picked it 958 times. The habit shrank and did not leave.
 
 SNLI was never in the train pile. The same three labels as MultiNLI, the training prompt, right padding, temperature 1.30: accuracy 0.910, ECE 0.013. That is transfer onto a held-out wording of a task the model did train on. It is not the typed-decisions number.
