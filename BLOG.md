@@ -50,13 +50,28 @@ These are the lines worth building the post around. Each one is already measured
 
 **SNLI is transfer of a label set the model already trained on.** 2,000 rows, never in the train file, same three labels as MultiNLI. Accuracy 0.910, ECE 0.013, on the training prompt with right padding. That sentence belongs next to the exam number, with a clear label. It does not decide whether the adapter stays.
 
+## Number to report
+
+The readout index was wrong. Gemma left-pads. `attention_mask.sum() - 1` is the first content token on a short row. The last content token is the last index where the mask is 1. Those indexes pick different letters on 824 of 2,000 exam questions.
+
+Report the training delta on one index. Both Phase 0 and Phase 4 stored `sum - 1`:
+
+| | correct |
+|---|---|
+| plain model, before | 752 / 2,000 |
+| LoRA, after | 941 / 2,000 |
+
+The LoRA at the last content token is 1,208 / 2,000. That count has no plain-model pair. The plain model was never forwarded at that index. Publishing 752 to 1,208 mixes the index fix with the training. Option 1 is the plain-model forward at the last content token, so 1,208 gets a before.
+
 ## What I would do next
 
 Re-read plain E4B at the last real token, on the same 2,000 exam prompts, with no adapter and no training. Then the 0.604 figure has a baseline. On that same pass, keep per-type accuracy, the slot histogram, and the reversed-option count for the adapter too. The current file only has the adapter’s overall last-token score.
 
 Write the post after that pair exists. The shared-index move from 0.376 to 0.471 can be the comparison today. The last-token number wants its own Phase 0 read before it is the headline.
 
-Leave the adapter unmerged. Do not start another training epoch until that read is in. The position habit is the training question that comes after the index is clean. Score questions are a data gap: the train pile has no 1-to-5 rows, which is why that slice barely moved.
+A second train is worth it for two gaps. The train file has no ordered-score rows, and that exam slice moved from 256 / 800 to 306 / 800. Slot 0 is still over-picked, 762 picks against 538 gold labels, and a reversed list changes the pick on 1,254 / 2,000. New score rows, and a shuffle rate above the 30 percent already used, are the data for that run.
+
+Another epoch on the same 40,820 rows is not. Letter loss already fell from 1.487 to about 0.25. More BoolQ yes/no is not either: exam yes/no went from 323 / 600 to 324 / 600. Leave the adapter unmerged until the plain-model read at the last content token is in.
 
 ## What the post can say now
 
