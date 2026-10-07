@@ -1,6 +1,6 @@
 # Blog notes
 
-Source notes for the post. The post is not written here. Phase 4 has not been run, so the exam comparison is still open. The public bar until then is the Phase 0 table.
+Source notes for the post. The post is not written here. Phase 4 has been run. The comparison with Phase 0 is the shared index, 0.376 to 0.471.
 
 ## Working titles
 
@@ -22,17 +22,23 @@ Use these as the through-line. Each one is something the runs actually showed.
 8. Shuffling about 30% of train rows moves the correct percentage with the word, so “always pick the first slot” stops being a shortcut.
 9. Train loss fell from 1.487 to a last-100-step mean of 0.246. That is the practice pile. It is a different measurement from the exam.
 10. Temperature changes how sure the percentages look. The winning letter stays put. Yes/no wanted 1.65. Multiple choice wanted 1.30. Score has no calibration rows, so it stays at 1.
-11. Calibration accuracy near 0.91 is the same kind of question as training. The exam, before any LoRA, was 0.376. The ceiling on that exam is about 73.5%, because the labels agree with themselves about that often.
+11. Calibration accuracy near 0.91 is the same kind of question as training. The exam, before any LoRA, was 0.376. With the LoRA, on that same index, it is 0.471, and ECE fell from 0.366 to 0.247. The ceiling on that exam is about 73.5%, because the labels agree with themselves about that often. The last real token on the LoRA pass scores 0.604, and Phase 0 has not been read at that token.
 
 ## What the post can say now
 
-The method, the stack, the Phase 0 exam, the latency, the data cut, the training curve, and the calibration temperatures.
+The method, the stack, the Phase 0 exam, the latency, the data cut, the training curve, the calibration temperatures, and the Phase 4 exam.
 
-## What the post waits to say
+The exam comparison uses the same index as Phase 0. On that index the LoRA is accuracy 0.471, ECE 0.247, Brier 0.737, against Phase 0 at 0.376, 0.366, and 0.905. The gate keeps the LoRA. Choice carried the gain (0.288 to 0.518). Yes/no stayed near 0.54. Score, absent from training, moved from 0.320 to 0.383.
 
-Whether the LoRA beat plain E4B on typed-decisions. Whether the first-slot habit survived a flipped option order. How the model scores on SNLI, which never entered training. Those three are Phase 4.
+Say the left-padding caveat next to those numbers. The tokenizer left-pads, and Phase 0 reads `mask.sum() - 1`. On the LoRA pass that position is not the last real token for 824 of 2,000 questions. The last real token on the same pass scores accuracy 0.604, ECE 0.162, Brier 0.550. Phase 0 was not re-run at that token, so 0.604 is not the comparison.
 
-A sentence that is safe today: the calibration pile shows the dial works, and the exam is the next measurement.
+The reversed option list changed the chosen id on 1,254 of 2,000 questions. Slot 0 is still over-picked: 762 picks, 538 gold labels. Phase 0 picked slot 0 on 958 questions.
+
+SNLI, held out of training, scores accuracy 0.910 and ECE 0.013. Same three labels as MultiNLI. That is not the typed-decisions exam.
+
+## What the post still leaves open
+
+A Phase 0 re-score at the last real token. Until that exists, the published comparison is the shared index: 0.376 to 0.471.
 
 ## Suggested order
 
@@ -43,7 +49,8 @@ A sentence that is safe today: the calibration pile shows the dial works, and th
 5. The rows: open data, generated gaps, the three piles, the shuffle.
 6. The training loop: Unsloth as the loader, PyTorch as the loss, the curve, the unmerged file.
 7. Temperature, with the two fitted values.
-8. Close on what is still unmeasured.
+8. The exam, the flip, and SNLI.
+9. What is still open: a Phase 0 read at the last real token.
 
 ## 1. The job
 
@@ -194,15 +201,30 @@ The search is a grid from 0.50 to 3.00 in steps of 0.05. The chosen `T` is the o
 
 Both values are above 1, so on this pile the model was a bit too sure. Accuracy at the chosen `T` matches accuracy at 1. There is no score row in the calibration pile, so score has no temperature and stays at 1 until a score calibration set exists.
 
-Say this next to the 0.91: these rows are BoolQ, MultiNLI, Banking77, refund rules, and passage yes/no. They never updated the weights, and they are the same kinds of questions as the train pile. Phase 0 on the public exam was 0.376. The 0.91 is the dial check. The exam is the next measurement.
+Say this next to the 0.91: these rows are BoolQ, MultiNLI, Banking77, refund rules, and passage yes/no. They never updated the weights, and they are the same kinds of questions as the train pile. The typed-decisions exam, on the shared index, moved from 0.376 to 0.471. The 0.91 is the dial check on the calibration pile.
 
 Brier is the third number. It gets worse when the pick is wrong and when the percentage was too extreme. Reporting it next to accuracy and ECE keeps a model from looking good on only one of them.
 
-## 8. Close
+## 8. The exam
 
-The plain model is a weak judge with a first-slot habit, and it is over-sure. One forward pass is enough to read the percentages, and it is much shorter than writing them out. The LoRA was trained to move those percentages, and a single temperature per question type was fit afterward. The file is still a separate adapter.
+Same 2,000 questions as Phase 0. Same letter prompt. `softmax(logits / T)` with yes/no at 1.65, multiple choice at 1.30, and score at 1. The adapter file was not rewritten.
 
-The remaining measurement is the same 2,000 exam questions, with `softmax(logits / T)`, plus a flipped option order, plus SNLI. Keep the LoRA if accuracy is up and ECE is down against the Phase 0 table, on data it was not trained on.
+| | accuracy | ECE | Brier |
+|---|---|---|---|
+| plain E4B | 0.376 | 0.366 | 0.905 |
+| LoRA, same index | 0.471 | 0.247 | 0.737 |
+
+Accuracy went up and ECE went down. 0.471 is under the 73.5% ceiling. The gain is concentrated in multiple choice, 0.288 to 0.518. Yes/no was already 0.538 and landed at 0.540. Score was not in the training pile and moved from 0.320 to 0.383.
+
+The tokenizer left-pads. Both Phase 0 and this run read `mask.sum() - 1`. For a shorter row in the batch, the last real token sits at the right edge, and that index does not point there. The two positions pick different option ids on 824 questions. The last real token on this LoRA pass scores accuracy 0.604, ECE 0.162, Brier 0.550. Publish 0.471 as the comparison with Phase 0. Publish 0.604 as the same forward pass read at the last real token, and say Phase 0 has not been read that way.
+
+Reversing the options changed the chosen id 62.7% of the time (1,254 / 2,000). Slot 0 got 762 picks against 538 gold labels. The plain model put 958 picks there. The habit is smaller. It is still in the weights.
+
+SNLI was left out of training. Accuracy 0.910, ECE 0.013, on the training prompt with right padding. The labels are entailment, neutral, and contradiction, which MultiNLI already taught. The number says that wording transferred. It does not say the typed-decisions exam transferred.
+
+## 9. Close
+
+The plain model is a weak judge with a first-slot habit, and it is over-sure. One forward pass is enough to read the percentages, and it is much shorter than writing them out. The LoRA moved the exam from 0.376 to 0.471 on the shared index, and the stated percentages got closer to the hit rate. The adapter is still a separate file. The first-slot habit shrank and did not disappear. A last-real-token read of this LoRA is 0.604, and the matching Phase 0 read has not been run.
 
 ## Numbers to keep exact
 
@@ -213,5 +235,6 @@ Rounded in the prose above. Exact floats:
 - Phase 2: step 1 loss 1.486908, early mean of steps 1, 26, 51, 76 = 0.97460325, last-100 mean 0.24618104. The saved adapter directory is 179,090,427 bytes. The weights file inside it is about 140 MB.
 - Latency medians: short 64.5 / 130.7 / 1944.7 ms, mid 65.4 / 134.0 / 1954.8 ms, longest 77.6 / 143.5 / 2101.6 ms. Those three clocks are one forward pass, decoding the letter, and a forced 32 new tokens.
 - Phase 3: yes/no `T = 1.65`, NLL 0.26683733964031514 → 0.22779646590519353, ECE 0.054589416184109084 → 0.014922792529572435. Choice `T = 1.3`, NLL 0.2304244724952239 → 0.21622760975523075, ECE 0.03188975182841046 → 0.009062708872826912.
+- Phase 4, same index as Phase 0: accuracy 0.4705, ECE 0.24664896169448602, Brier 0.7370409524588989. Last real token on that pass: accuracy 0.604, ECE 0.16193150770165962, Brier 0.5501747421983022. Index disagreement: 824 / 2000. Flip changes: 1254 / 2000. SNLI: accuracy 0.91, ECE 0.012526768167657777, Brier 0.13375256693900067.
 
 Files: `results/phase0/baseline.json`, `results/phase2/train.json`, `results/phase3/temperature.json`. The reasons for each design choice are in `LEARNING.md`.

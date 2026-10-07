@@ -293,6 +293,23 @@ Score the LoRA on typed-decisions with `softmax(logits / T)`. Put the three numb
 
 Reason: the LoRA is worth keeping only if accuracy went up and ECE went down versus plain E4B, on data it was not trained on.
 
+The run used the Phase 0 exam prompt. The saved Phase 0 example string is one of the 2,000 prompts, so the template matches. Temperatures are the Phase 3 values: yes/no 1.65, multiple choice 1.30, score 1. The LoRA file was not rewritten.
+
+On the same index Phase 0 used:
+
+| | accuracy | ECE | Brier |
+|---|---|---|---|
+| plain E4B | 0.376 | 0.366 | 0.905 |
+| LoRA | 0.471 | 0.247 | 0.737 |
+
+Choice moved from 0.288 to 0.518. Yes/no stayed near 0.54 (0.538 to 0.540). Score, which was not in the train pile, moved from 0.320 to 0.383. Accuracy is up and ECE is down, so the gate keeps the LoRA. 0.471 is under the 73.5% ceiling.
+
+The Gemma tokenizer left-pads. Phase 0 takes the logits at `mask.sum() - 1`. For a left-padded row that index is not the last real token, except on the longest row in the batch. On this LoRA pass the two positions disagree for 824 of 2,000 questions. Reading the last real token instead scores accuracy 0.604, ECE 0.162, Brier 0.550. That is a different index from Phase 0, so it is not the gate. Phase 0 was not run again at the last real token.
+
+Reversing the option list changed the chosen option id on 1,254 of 2,000 questions. Slot 0 is still the most common pick, 762 times, against a gold count of 538. Phase 0 picked it 958 times. The habit shrank and did not leave.
+
+SNLI was never in the train pile. The same three labels as MultiNLI, the training prompt, right padding, temperature 1.30: accuracy 0.910, ECE 0.013. That is transfer onto a held-out wording of a task the model did train on. It is not the typed-decisions number.
+
 ## Choices we are not taking in v1
 
 | Other approach | Why it waits |

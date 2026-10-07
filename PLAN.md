@@ -1,6 +1,6 @@
 # System One model plan
 
-Status: Phase 4 in progress. Phases 0–3 are done. This file is the handoff for a future agent. Do not skip ahead of the phase gates.
+Status: Phase 4 done. Gate met. The LoRA stays. This file is the handoff for a future agent. Do not skip ahead of the phase gates.
 
 The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
 
@@ -144,11 +144,28 @@ Gate: the JSON exists, and it was not fit on the train pile, SNLI, or typed-deci
 
 ## Phase 4 — Exam
 
-Status: in progress. The LoRA stays frozen. Score `LocalLLaMA/typed-decisions` config `all` split `test` (2,000 questions) with the Phase 0 letter prompt (`A. id: text`) and the Phase 0 tokenizer padding call. Softmax is `softmax(logits / T)` with the Phase 3 temperatures: noul 1.65, choice 1.30, score 1. Score has no calibration rows, so it stays at 1.
+Status: done. Gate met. The LoRA stays. File: `results/phase4/exam.json`. Run: https://modal.com/apps/omnaidu42/main/ap-1wFzOpGmDsVQ5qagerOK3L The container is stopped. The LoRA was loaded from `adapter/` and was not rewritten.
 
-Also reverse each option list, rebind the letters, and count how often the chosen option id changes. Score the 2,000 SNLI rows in `data/phase1/held_out.jsonl` with the training prompt (`A. {option}`) and right padding, at the choice temperature 1.30.
+The exam prompt matches Phase 0 (`A. id: text`), checked against the saved Phase 0 example. Tokenizer padding matches Phase 0: `padding_side` is `left`, and the scored position is `mask.sum() - 1`. Temperatures: noul 1.65, choice 1.30, score 1.
 
-Gate: accuracy higher than Phase 0 and ECE lower, on this exam. SNLI is reported beside the gate. It does not enter the boolean. A score a little above the 73.5% ceiling means the model fit the teacher’s quirks.
+| | accuracy | ECE | Brier |
+|---|---|---|---|
+| Phase 0, plain E4B | 0.376 | 0.366 | 0.905 |
+| Phase 4, LoRA, same index | 0.471 | 0.247 | 0.737 |
+
+| type | n | Phase 0 accuracy | Phase 4 accuracy | Phase 0 ECE | Phase 4 ECE |
+|---|---|---|---|---|---|
+| choice | 600 | 0.288 | 0.518 | 0.384 | 0.195 |
+| noul | 600 | 0.538 | 0.540 | 0.294 | 0.151 |
+| score | 800 | 0.320 | 0.383 | 0.407 | 0.363 |
+
+Accuracy is up and ECE is down, so the gate says keep the LoRA. The score is under the 73.5% ceiling.
+
+The same forward pass, read at the last real token instead of `mask.sum() - 1`, scores accuracy 0.604, ECE 0.162, Brier 0.550. Those two indexes disagree on 824 of 2,000 questions because the tokenizer left-pads. Phase 0 used `mask.sum() - 1`, so the gate uses that index. The 0.604 figure is not a comparison with Phase 0. Phase 0 was not re-scored at the last real token.
+
+Option order was reversed and the letters were rebound. The chosen option id changed on 1,254 of 2,000 questions (0.627). Slot 0 was the pick on 762 questions (38.1%). The gold label is in slot 0 on 538 (26.9%). Phase 0 picked slot 0 on 958 (47.9%). The first-slot habit is smaller and still present. Flipped-prompt accuracy is 0.476.
+
+SNLI, 2,000 rows never used in training, training prompt, right padding, choice temperature 1.30: accuracy 0.910, ECE 0.013, Brier 0.134. That score is the same three-way label set as MultiNLI. It is not the typed-decisions exam, and it does not enter the keep boolean.
 
 ## Out of scope for v1
 
