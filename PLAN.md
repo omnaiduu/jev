@@ -1,6 +1,6 @@
 # System One model plan
 
-Status: Phase 2 done. Gate met. Phases 3–4 are not started. This file is the handoff for a future agent. Do not start the next phase until asked. Do not skip ahead of the phase gates.
+Status: Phase 3 in progress. Phases 0–2 are done. Phase 4 is not started. This file is the handoff for a future agent. Do not start the next phase until asked. Do not skip ahead of the phase gates.
 
 The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
 
@@ -89,7 +89,7 @@ Latency, separate from the gate, is in `results/phase0/latency.json`. On an L40S
 
 Exact floats are in the JSON. Rounded here to three decimals.
 
-A uniform guess over the real option counts scores 0.318 (600 two-way questions, 1,100 four-way, 300 five-way). The readout is 0.058 above that. Mean confidence on the chosen letter is 0.742. That gap is the ECE: the model states about 74% while it is right 37.6% of the time. Temperature is not applied. Fitting it on this file would use the exam as the dial. That is Phase 3, on a calibration pile that does not exist yet.
+A uniform guess over the real option counts scores 0.318 (600 two-way questions, 1,100 four-way, 300 five-way). The readout is 0.058 above that. Mean confidence on the chosen letter is 0.742. That gap is the ECE: the model states about 74% while it is right 37.6% of the time. Temperature is not applied. Fitting it on this file would use the exam as the dial. That fit is Phase 3, on the calibration pile.
 
 Position bias: letter `A` (slot 0) was the pick on 958 / 2,000 questions (47.9%). The gold label is slot 0 on 538 / 2,000 (26.9%). Picked vs gold by slot: 0 is 958 vs 538, 1 is 454 vs 585, 2 is 289 vs 493, 3 is 263 vs 330, 4 is 36 vs 54. Phase 4 must flip option order and score with the same letters. The train shuffle exists to fight this bias.
 
@@ -127,9 +127,11 @@ Gate: `adapter_config.json` exists, the saved tensors are the adapter, and the l
 
 ## Phase 3 — Temperature
 
-Freeze the LoRA. Run it on the calibration pile. Fit one `T` per question type by minimizing cross-entropy on that pile (L-BFGS, or a small grid such as 0.5, 0.8, 1.0, 1.5, 2.0). Save `T` beside the LoRA.
+Status: in progress. The LoRA stays frozen. The fit reads `data/phase1/calibration.jsonl` only (4,000 rows: 912 noul, 3,088 choice, none shuffled). There is no score row, so score gets no `T`. Phase 4 uses `T = 1` for score until a score calibration set exists.
 
-Gate: a JSON file of temperatures exists. It was not fit on the train pile or the test pile.
+Search a grid from 0.50 to 3.00 step 0.05. Keep the `T` with the lowest mean letter cross-entropy. Accuracy at that `T` must match accuracy at `T = 1`. Save the JSON on the volume `phase2-lora` at `temperature.json` and in `results/phase3/temperature.json`.
+
+Gate: that JSON exists, and it was not fit on the train pile, SNLI, or typed-decisions. The calibration ECE is a check that the dial moved. The exam is still Phase 4.
 
 ## Phase 4 — Exam
 
