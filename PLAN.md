@@ -1,6 +1,6 @@
 # System One model plan
 
-Status: Phase 3 in progress. Phases 0–2 are done. Phase 4 is not started. This file is the handoff for a future agent. Do not start the next phase until asked. Do not skip ahead of the phase gates.
+Status: Phase 3 done. Gate met. Phase 4 is not started. This file is the handoff for a future agent. Do not start the next phase until asked. Do not skip ahead of the phase gates.
 
 The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
 
@@ -127,11 +127,20 @@ Gate: `adapter_config.json` exists, the saved tensors are the adapter, and the l
 
 ## Phase 3 — Temperature
 
-Status: in progress. The LoRA stays frozen. The fit reads `data/phase1/calibration.jsonl` only (4,000 rows: 912 noul, 3,088 choice, none shuffled). There is no score row, so score gets no `T`. Phase 4 uses `T = 1` for score until a score calibration set exists.
+Status: done. Gate met. File: `results/phase3/temperature.json`. Copy on the volume `phase2-lora` at `temperature.json`. Run: https://modal.com/apps/omnaidu42/main/ap-HlBDLGyuMlT99yqMQ10aar The container is stopped. The LoRA was loaded from `adapter/` and was not rewritten.
 
-Search a grid from 0.50 to 3.00 step 0.05. Keep the `T` with the lowest mean letter cross-entropy. Accuracy at that `T` must match accuracy at `T = 1`. Save the JSON on the volume `phase2-lora` at `temperature.json` and in `results/phase3/temperature.json`.
+The fit read `data/phase1/calibration.jsonl` only (4,000 rows: 912 noul, 3,088 choice, none shuffled). Grid 0.50 to 3.00 step 0.05. Chosen `T` is the lowest mean letter cross-entropy. Accuracy at that `T` matches accuracy at `T = 1`.
 
-Gate: that JSON exists, and it was not fit on the train pile, SNLI, or typed-decisions. The calibration ECE is a check that the dial moved. The exam is still Phase 4.
+| type | n | T | accuracy | ECE at 1 | ECE at T |
+|---|---|---|---|---|---|
+| choice | 3088 | 1.30 | 0.923 | 0.032 | 0.009 |
+| noul | 912 | 1.65 | 0.909 | 0.055 | 0.015 |
+
+`score` is missing from this pile, so it has no temperature. Phase 4 uses `T = 1` for score.
+
+These rows are the same sources as training. The accuracy above is not the exam. Phase 0 on typed-decisions was 0.376. Phase 4 is the comparison, with `softmax(logits / T)` and the Phase 0 exam prompt.
+
+Gate: the JSON exists, and it was not fit on the train pile, SNLI, or typed-decisions.
 
 ## Phase 4 — Exam
 

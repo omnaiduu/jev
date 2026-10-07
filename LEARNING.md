@@ -276,7 +276,16 @@ The search is a grid from 0.50 to 3.00 in steps of 0.05. The chosen `T` is the o
 
 The calibration pile is 4,000 rows and was not shuffled. 912 are yes/no (`noul`). 3,088 are multiple choice. There is no `score` row in this pile, so `score` gets no temperature. Phase 4 leaves `score` at `T = 1` until a calibration set for it exists. The fit does not read the train pile, SNLI, or typed-decisions.
 
-The numbers from the fit go in `results/phase3/temperature.json`. They describe the calibration pile. They are not the exam.
+The fit is in `results/phase3/temperature.json`. The LoRA was loaded from `adapter/` and was not rewritten. Gradients were off.
+
+| type | rows | T | accuracy | NLL at 1 → at T | ECE at 1 → at T | Brier at 1 → at T |
+|---|---|---|---|---|---|---|
+| choice | 3088 | 1.30 | 0.923 | 0.230 → 0.216 | 0.032 → 0.009 | 0.119 → 0.116 |
+| noul | 912 | 1.65 | 0.909 | 0.267 → 0.228 | 0.055 → 0.015 | 0.143 → 0.133 |
+
+Both temperatures are above 1, so the model was a bit too sure on this pile. Accuracy at the chosen `T` matches accuracy at `T = 1`. Exact floats are in the JSON.
+
+These rows are the same kinds of questions as the train pile: BoolQ, MultiNLI, Banking77, refund rules, and passage yes/no. They never updated the weights, and they are not the exam. Phase 0 on typed-decisions was 0.376. A calibration accuracy near 0.91 does not say the exam moved. That check is Phase 4.
 
 ### Phase 4 — Exam
 
@@ -362,4 +371,6 @@ A Modal client left connected for about 21 minutes had the GPU input cancelled. 
 
 Fit one `T` per question type, on the calibration pile only. That pile is 912 yes/no and 3,088 multiple choice. It has no 1-to-5 score rows, so score is left at `T = 1`. The search grid is 0.50 to 3.00 step 0.05, and the winner is the `T` with the lowest mean `-log(p_correct)`.
 
-The fitted values, and the calibration ECE before and after, belong in the next paragraph once `results/phase3/temperature.json` exists. Those numbers are the dial on the calibration pile. They are not the published exam score.
+The fit chose `T = 1.65` for yes/no (912 rows) and `T = 1.30` for multiple choice (3,088 rows). On this pile, ECE moved from 0.055 to 0.015 for yes/no and from 0.032 to 0.009 for multiple choice. Accuracy stayed 0.909 and 0.923. Both temperatures are above 1, so the stated percentages got a little less sure. Score has no `T`.
+
+That accuracy is on calibration rows from the same sources as training. It is not the typed-decisions exam. Phase 0 on that exam, before any LoRA, was 0.376. Whether the exam moved is Phase 4.
