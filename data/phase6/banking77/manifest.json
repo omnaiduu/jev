@@ -1,0 +1,71 @@
+{
+  "dataset": "banking77",
+  "seed": 0,
+  "padding_side": "right",
+  "prompt_sha256": "06bf695261cfc389a19f9b5b0476e0c9cb1d6384c98869068a6a49ea1d22b79b",
+  "prompt_template": "A. {option text}",
+  "system_prompt": "You are a judge. The next token must be one of the option letters. Do not explain.",
+  "label_source": "one of 77 intents, shown as the true intent plus 19 distractors",
+  "target_kind": "one_hot",
+  "calibration_n_target": 2000,
+  "downloaded": {
+    "train_examples": 9993,
+    "test_examples": 3076,
+    "intents": 77,
+    "source": "mteb/banking77",
+    "option_draw": "true intent plus 19 distractors, drawn once while the split is written",
+    "train_option_seed": 0,
+    "test_option_seed": 1,
+    "dropped_train": 0,
+    "dropped_test": 0,
+    "dropped_test_overlap": 6,
+    "dropped_duplicate_rows": 0,
+    "dropped_label_conflicts": 0
+  },
+  "train_rows": 7987,
+  "calibration_rows": 2000,
+  "test_rows": 3076,
+  "train_shuffled_rows": 2396,
+  "train_shuffle_fraction": 0.3,
+  "calibration_shuffled_rows": 0,
+  "test_shuffled_rows": 0,
+  "train_row_order": "shuffled",
+  "calibration_row_order": "source_order",
+  "test_row_order": "source_order",
+  "types_train": {
+    "choice": 7987
+  },
+  "types_calibration": {
+    "choice": 2000
+  },
+  "types_test": {
+    "choice": 3076
+  },
+  "missing_calibration_types": [],
+  "duplicate_keys_train": 0,
+  "duplicate_keys_test": 0,
+  "test_ids_in_train": 0,
+  "test_ids_in_calibration": 0,
+  "files": {
+    "train": {
+      "path": "data/phase6/banking77/train.jsonl",
+      "rows": 7987,
+      "sha256": "abc638efbab4de7a85848d97d7bc1aeb4b29f1b5a759873c39cf66b73cf5a246",
+      "bytes": 11842398
+    },
+    "calibration": {
+      "path": "data/phase6/banking77/calibration.jsonl",
+      "rows": 2000,
+      "sha256": "f6564e269b5a5f03fb19d2b11a45540dc707d08f22b9842de77d86837c1331dc",
+      "bytes": 2965982
+    },
+    "test": {
+      "path": "data/phase6/banking77/test.jsonl",
+      "rows": 3076,
+      "sha256": "123440775d5b9e81fe3b6793b2c8b9b06c57815599597c48f49ba564a1fee3ec",
+      "bytes": 4538141
+    }
+  },
+  "one_hot_letter": true,
+  "options_per_row": 20
+}
