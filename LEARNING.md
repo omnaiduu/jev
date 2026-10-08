@@ -329,6 +329,56 @@ SNLI was never in the train pile. The same three labels as MultiNLI, the trainin
 | A custom head and a 27B model, the Clef setup | Same API, much more work. E4B is the first experiment. |
 | Use this model as an embedder | Embeddings need a different loss (pull similar texts together). A chat or judge checkpoint is a weak index. A small embedding model stays the retriever. |
 
+## What failed, and the rule for the next run
+
+The LoRA loop ran. Loss on the practice rows fell. The evaluation did not show that the LoRA is better than plain Gemma on the tasks it was trained for, because that before-score was never taken. This saved file is not a judge for a new list of categories.
+
+### What was measured
+
+Practice file, 40,820 rows, weights updated: MultiNLI 20,947, Banking77 9,101, BoolQ 8,586, refund and passage rules 2,186. The letter on the rule rows was set by Python. A larger model wrote the email text only.
+
+After training, on rows the weights did not see:
+
+| set | what it is | correct |
+|---|---|---|
+| calibration, 4,000 rows | more BoolQ, MultiNLI, Banking77, and the same rules | about 3,680 / 4,000 |
+| SNLI, 2,000 rows | same three labels as MultiNLI, different sentences | 1,820 / 2,000 |
+
+Plain Gemma was not scored on those two sets. There is no before-count, and no “went up by N,” for either one.
+
+typed-decisions is a separate public file. We did not train on its 6,000 train questions. Its stored letter is the average of three samples from another model, temperature 0.7. That other model is the teacher. Our Gemma did not write the letters.
+
+On that file the only before-and-after is:
+
+| where the logit was read | plain Gemma | first LoRA | second LoRA |
+|---|---|---|---|
+| count from the left | 752 / 2,000 | 941 / 2,000 | 899 / 2,000 |
+| last real token | 1,289 / 2,000 | 1,208 / 2,000 | 1,264 / 2,000 |
+
+The last real token is the end of the question. That is the position the training loss used. At that position the first LoRA is 81 questions below plain Gemma. The second pass, 2,186 score rows plus 4,000 reshuffled choice rows, reached 1,264 and stayed below 1,289.
+
+### What was wrong on our side
+
+The exam scorer padded blanks on the left. `mask.sum() - 1` then lands early in the row. Training padded blanks on the right, so the loss saw the last real token. The published comparison, 752 to 941, is both models read at the early token. The plain re-score later showed 1,289 at the last real token. Reporting 752 to 941 as the training result used the wrong position.
+
+Accuracy and calibration were not recorded on each dataset before training. Calibration here means ECE: group questions by the percentage on the chosen letter, and compare that percentage with how often the letter was right. After training, 3,680 of 4,000 and 1,820 of 2,000 show that the LoRA can answer those tasks. They do not show that training raised the count.
+
+typed-decisions was used as the scoreboard without a train-and-test on that same file. Its labels also move: a fresh sample from the teacher matches the stored letter on about 1,470 of 2,000. Matching the file is not the same as a correct decision on the invoice.
+
+### Rule for the next training run
+
+For each dataset, before any weight update:
+
+1. Cut train, calibration, and test.
+2. Score plain Gemma on that test. Record accuracy and ECE.
+3. Fine-tune on the train rows only.
+4. Score the LoRA on the same test. Record accuracy and ECE.
+5. Keep the LoRA for that dataset only if accuracy went up and ECE went down.
+
+Do this per dataset. A high score on MultiNLI does not stand in for Banking77 or for typed-decisions.
+
+typed-decisions is included, as its own run, not as a replacement for the others. The stored letters remain the teacher’s average of three samples, so a higher count means closer to that teacher. The 1,289 of 2,000 figure used the old exam prompt, so it is not the before-count once the prompt is frozen. Do not overwrite the current LoRA file. The executable steps, the prompt, the right-padding assert, and the four datasets are in `PROTOCOL.md`. This run has not been started.
+
 ## Writeup notes
 
 The source notes for the post are in `BLOG.md`. That file has the suggested order, the measured numbers, and the claims that wait for Phase 4. This file stays the design record.

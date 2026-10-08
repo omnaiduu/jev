@@ -78,9 +78,9 @@ The second pass did not beat the first adapter on the shared index: 941 down to 
 
 ## What I would do next
 
-Both measurements are in. The number to publish as the training comparison stays 752 / 2,000 to 941 / 2,000 on `sum - 1`. The last-content pair is plain 1,289 versus first LoRA 1,208, and the second pass landed at 1,264. The score homework did not lift the score slice past the plain model at the right token (477 / 800 plain, 472 / 800 second pass).
+The mixed-pile protocol is retired. `PROTOCOL.md` is the replacement. Each dataset gets its own train, calibration, and test cut, a plain-model score on that test, then a new LoRA trained only on that train cut and scored on the same test. typed-decisions is one of those datasets. Its 6,000 train questions were left unused; its 2,000 test questions stay unused until that run. Agreement with the teacher tops out around 1,470 of 2,000.
 
-Another epoch on the same 40,820 rows is not the next move. More BoolQ is not either. Leave both adapters unmerged. Do not train on the exam.
+The retired comparison stays in the post as a negative result: 752 to 941 of 2,000 on the early token, and 1,289 plain versus 1,208 then 1,264 at the last real token. Another epoch on the same 40,820 rows is not the next move. Leave both old adapters unmerged.
 
 ## What the post can say now
 

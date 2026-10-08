@@ -1,8 +1,8 @@
 # System One model plan
 
-Status: Phase 4 done. Gate met on the shared index (752 to 941 of 2,000). The plain model at the last content token is 1,289 of 2,000. The first LoRA at that token is 1,208 of 2,000. A second pass scored 899 of 2,000 on the shared index and 1,264 of 2,000 at the last content token. The first adapter stays. This file is the handoff for a future agent. Do not skip ahead of the phase gates.
+Status: retired as the training protocol. The mixed pile graded on typed-decisions measured transfer onto a different task, at a token the loss did not train. The active plan is `PROTOCOL.md`: one dataset, one new LoRA from the base, a frozen test split, plain score then trained score, same prompt, last real token. Do not start that run until asked. The sections below are the record of the retired run.
 
-The reasons for each choice, with the examples from the design questions, are in `LEARNING.md`. Read that before changing the approach.
+The reasons for each old choice are in `LEARNING.md`. The engineered reason the protocol changed is in `PROTOCOL.md`.
 
 Goal: a small judge. Given a situation and a closed list of answers, return a percentage for each answer. No generated paragraph.
 
