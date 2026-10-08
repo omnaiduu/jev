@@ -1,0 +1,18 @@
+{
+  "rows": 6186,
+  "by_source": {
+    "passage_count": 729,
+    "refund_severity": 1457,
+    "multinli": 2818,
+    "banking77": 1182
+  },
+  "by_type": {
+    "score": 2186,
+    "choice": 4000
+  },
+  "shuffled": 6186,
+  "replay": 4000,
+  "seed": 1,
+  "exam_included": false,
+  "boolq_included": false
+}

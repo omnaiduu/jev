@@ -1,0 +1,67 @@
+{
+  "adapter": "adapter-pass2",
+  "merged": false,
+  "weights_updated": false,
+  "temperatures": {
+    "noul": 1.65,
+    "choice": 1.3,
+    "score": 1.0
+  },
+  "padding_side": "left",
+  "shortcut_correct": 899,
+  "last_content_correct": 1264,
+  "shortcut": {
+    "n_questions": 2000,
+    "n_cases": 400,
+    "accuracy": 0.4495,
+    "ece": 0.2988679516317932,
+    "brier": 0.7840461950157366,
+    "type": {
+      "choice": {
+        "n": 600,
+        "accuracy": 0.4683333333333333,
+        "ece": 0.2559415393660638,
+        "brier": 0.746156127083166
+      },
+      "noul": {
+        "n": 600,
+        "accuracy": 0.535,
+        "ece": 0.18586253519675172,
+        "brier": 0.5898386984100111
+      },
+      "score": {
+        "n": 800,
+        "accuracy": 0.37125,
+        "ece": 0.41581682315737145,
+        "brier": 0.9581193684194599
+      }
+    }
+  },
+  "last_content": {
+    "n_questions": 2000,
+    "n_cases": 400,
+    "accuracy": 0.632,
+    "ece": 0.252364327823452,
+    "brier": 0.601706332312328,
+    "type": {
+      "choice": {
+        "n": 600,
+        "accuracy": 0.6683333333333333,
+        "ece": 0.19235703045122537,
+        "brier": 0.5134025770098433
+      },
+      "noul": {
+        "n": 600,
+        "accuracy": 0.6516666666666666,
+        "ece": 0.25631432875743776,
+        "brier": 0.5771739395907808
+      },
+      "score": {
+        "n": 800,
+        "accuracy": 0.59,
+        "ece": 0.3034552452564135,
+        "brier": 0.6863334433303485
+      }
+    }
+  }
+}
