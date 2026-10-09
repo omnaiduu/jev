@@ -388,6 +388,31 @@ The papers cited above say `2e-4` can add update directions that track forgettin
 - 232 fixed, 84 broken. A kept adapter can still be wrong on rows the base had right.
 - The flipped rows used to be sure. After the update they are close. The flip count did not say that. The margin did.
 
+## Step log: Banking77 training has started
+
+9 October 2026, 03:11 UTC. `modal run phase6/modal_train.py --dataset banking77`. App `ap-64XABWKc8FXitRRCpYB36q`. Fresh LoRA from `unsloth/gemma-4-E4B-it`, not from `/lora/v2-boolq` and not from the retired adapter directories. Rank 16, alpha 16, 588 trainable tensors in the text stack. Train rows 7,987. Steps 999. Batch 8. Same learning-rate schedule as BoolQ: warmup to `2e-4` over 100 steps, then cosine toward `2e-5`. Save directory `/lora/v2-banking77`. One GPU. BoolQ’s score was finished before this process started.
+
+Printed batch losses, one batch of eight. Chance for 20 letters is `log(20) = 2.996`. The plain test’s mean letter NLL is 1.109. Every print below is already under chance.
+
+| completed step | batch letter NLL | learning rate |
+|---:|---:|---:|
+| 1 | 0.6477 | 0.000002 |
+| 26 | 1.5365 | 0.000052 |
+| 51 | 1.6417 | 0.000102 |
+| 76 | 0.7777 | 0.000152 |
+| 101 | 0.0317 | 0.000200 |
+| 126 | 0.7613 | 0.000200 |
+
+Step 51 at 1.64 is about two confident misses in the eight, using the plain-test miss NLL of about 6.3 as the scale (`6.3 / 8 × 2 ≈ 1.6`). Step 101 at 0.032 is a batch the base already knows, at the moment the learning rate first sits at `2e-4`. Same reading as BoolQ: the print is the batch, not the epoch.
+
+### What the plain misses look like, so the score has something to beat besides 2,547
+
+The before-count is 2,547 / 3,076, ECE 0.120. Each test row shows the true intent plus 19 stored distractors, not the other 56 names. A confusion counted below can happen only when that other name was drawn into the twenty. It is not a 77-way matrix.
+
+The weak recalls, out of about 40 support each: `get_physical_card` 4/40, `beneficiary_not_allowed` 13/40, `top_up_by_bank_transfer_charge` 15/40, `top_up_by_card_charge` 18/40, `topping_up_by_card` 19/40. Five intents are perfect on this file, including `terminate_account`, `transaction_charged_twice`, and `verify_my_identity`, 40/40.
+
+The repeated substitutions are near-duplicate names: `exchange_via_app` called `exchange_rate` (7), `top_up_by_card_charge` called `card_payment_fee_charged` (6) or `topping_up_by_card` (6), `top_up_by_bank_transfer_charge` called `transfer_fee_charged` (6), `why_verify_identity` called `verify_my_identity` (6). `get_physical_card` is the odd one: 7 times `passcode_forgotten`, 6 times `change_pin`, which are not the same request. A Banking77 keep that only lifts the near-duplicates is a different result from one that also lifts `get_physical_card`. The correct count will not say which. The per-intent recall will. That table gets written when `lora.json` exists. The keep bar itself is unchanged: correct above 2,547 and ECE below 0.120 at the fitted `T`.
+
 ## Reliability bins, before any adapter
 
 Same five files, ten equal-width bins of top-letter probability, the same binning as the ECE. No row on any test put less than 0.2 on its chosen letter. BoolQ never went below 0.5.
