@@ -296,3 +296,27 @@ Step 101 is the first print after warmup. The learning rate is `2e-4` there, whi
 The before-count is 2,824 / 3,270, ECE 0.117, at `T = 1`. Keep needs a higher correct count and a lower ECE at the fitted `T`. The logit reading says most of the headroom is the confident misses, and that a higher correct count can still raise ECE if the remaining misses get sharper. Both halves of the keep bit have to be read. Accuracy at the fitted `T` must equal accuracy at `T = 1`.
 
 The other three trainings stay queued behind this one. One GPU at a time.
+
+## Reliability bins, before any adapter
+
+Same five files, ten equal-width bins of top-letter probability, the same binning as the ECE. No row on any test put less than 0.2 on its chosen letter. BoolQ never went below 0.5.
+
+The top bin is the test. Share of rows whose chosen letter is above 0.9, and the accuracy inside that bin:
+
+| test | rows above 0.9 | share | accuracy in that bin | mean probability in that bin |
+|---|---:|---:|---:|---:|
+| BoolQ | 3,069 / 3,270 | 0.939 | 0.887 | 0.995 |
+| Banking77 | 2,584 / 3,076 | 0.840 | 0.899 | 0.993 |
+| MultiNLI | 7,869 / 9,815 | 0.802 | 0.808 | 0.984 |
+| SNLI | 8,985 / 9,842 | 0.913 | 0.632 | 0.991 |
+| typed-decisions | 1,434 / 2,000 | 0.717 | 0.690 | 0.984 |
+
+MultiNLI’s top bin is almost calibrated: probability 0.984 against a hit rate 0.808 is still a gap, but it is the smallest relative miss among the five, and the bin holds 80% of the file. SNLI puts 91% of its rows in the same bin and is right 63% of the time there. The probability is 0.991. That single bin is the ECE of 0.349.
+
+BoolQ below 0.9 is 201 rows. Their hit rate is 0.507. The bins from 0.5 to 0.9 do not rank those rows: accuracy sits near one half while the stated probability climbs from 0.55 to 0.86. The 86% headline is the top bin’s 88.7% on 94% of the file, diluted by a coin flip on the rest. When this model is unsure on a yes/no question, the unsure-ness is not information.
+
+typed-decisions has the same break. The 0.8–0.9 bin is 208 rows, stated probability 0.854, hit rate 0.423. The top bin is 1,434 rows, stated probability 0.984, hit rate 0.690. A higher percentage is a better sign only once the letter is already above 0.9, and even then the percentage is about 0.29 too high.
+
+One temperature moves every row’s probability toward uniform together. It can pull SNLI’s 0.99 toward 0.63, and it can pull BoolQ’s 0.995 toward 0.887. It cannot make the 0.5–0.9 band start ranking hits, because those rows are not ordered by accuracy in the first place. Guo et al. still apply to the dominant bin, which is why the protocol fits one `T`. The bin table says what that `T` will not fix.
+
+A prediction for the later SNLI transfer score: MultiNLI’s top-bin gap is 0.176 and SNLI’s is 0.359. The `T` fit on MultiNLI calibration will be the one applied to SNLI. It will be sized for the milder gap. SNLI can stay over-sure after that transfer. That comparison stays out of the keep bit. It is the check on whether one dataset’s temperature is a property of the three label words. The bin table says it is not.
