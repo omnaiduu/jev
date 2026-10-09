@@ -1,0 +1,10 @@
+{
+  "status": "partial",
+  "dataset": "banking77",
+  "step": 829,
+  "steps": 999,
+  "rows": 7987,
+  "last_loss": 0.852457,
+  "adapter_dir": "/lora/v2-banking77",
+  "merged": false
+}

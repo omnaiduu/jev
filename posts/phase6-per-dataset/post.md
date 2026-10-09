@@ -413,6 +413,21 @@ The weak recalls, out of about 40 support each: `get_physical_card` 4/40, `benef
 
 The repeated substitutions are near-duplicate names: `exchange_via_app` called `exchange_rate` (7), `top_up_by_card_charge` called `card_payment_fee_charged` (6) or `topping_up_by_card` (6), `top_up_by_bank_transfer_charge` called `transfer_fee_charged` (6), `why_verify_identity` called `verify_my_identity` (6). `get_physical_card` is the odd one: 7 times `passcode_forgotten`, 6 times `change_pin`, which are not the same request. A Banking77 keep that only lifts the near-duplicates is a different result from one that also lifts `get_physical_card`. The correct count will not say which. The per-intent recall will. That table gets written when `lora.json` exists. The keep bar itself is unchanged: correct above 2,547 and ECE below 0.120 at the fitted `T`.
 
+## Step log: Banking77 checkpoint at step 829
+
+9 October 2026, 03:20 UTC. `results/phase6/banking77/train_status.json`.
+
+```
+status partial
+step 829 / 999
+rows 7987
+last_loss 0.852457
+adapter_dir /lora/v2-banking77
+merged false
+```
+
+`last_loss` is the last batch of the chunk. 0.85 is under the plain-test mean of 1.109 and under `log(20)`. It is still one batch. The second chunk resumed at step 829 with a fresh AdamW. The next print, step 851, is loss 0.0279 at learning rate 0.000032, which is an easy batch near the cosine floor. 170 steps remain. The test score waits on step 999.
+
 ## Reliability bins, before any adapter
 
 Same five files, ten equal-width bins of top-letter probability, the same binning as the ECE. No row on any test put less than 0.2 on its chosen letter. BoolQ never went below 0.5.
