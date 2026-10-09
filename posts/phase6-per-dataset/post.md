@@ -297,6 +297,25 @@ The before-count is 2,824 / 3,270, ECE 0.117, at `T = 1`. Keep needs a higher co
 
 The other three trainings stay queued behind this one. One GPU at a time.
 
+## Step log: BoolQ checkpoint at step 536
+
+9 October 2026, 02:52 UTC. The first chunk wrote `/lora/v2-boolq` and returned. Local file: `results/phase6/boolq/train_status.json`.
+
+```
+status partial
+step 536 / 929
+rows 7427
+last_loss 0.49067
+adapter_dir /lora/v2-boolq
+merged false
+```
+
+`last_loss` is the last batch of eight in the chunk, not a mean over the 536 steps. 0.491 is the same scale as the plain-test mean letter NLL, 0.772, and the same scale as one confident miss diluted by seven easy rows. The chunk did not print a running mean, so this number is not “the loss after 536 steps.”
+
+The process then started a second chunk on a fresh AdamW and loaded that checkpoint. The log line is `resumed at step 536/929`. The next printed batch, step 551, is loss 0.0018 at learning rate 0.000098. That is an easy batch at the post-warmup rate, which has already cosine-decayed from `2e-4` to about `1e-4`. It is not evidence that the resumed model has letter NLL near zero. The plain-test median is 0.0001, so batches like this exist before any update.
+
+What the checkpoint establishes: the adapter directory is the BoolQ one, the Phase 2 and Phase 5 directories were not the save target, and the weights are not merged into the base. 393 steps remain. The test score still waits on step 929.
+
 ## Reliability bins, before any adapter
 
 Same five files, ten equal-width bins of top-letter probability, the same binning as the ECE. No row on any test put less than 0.2 on its chosen letter. BoolQ never went below 0.5.

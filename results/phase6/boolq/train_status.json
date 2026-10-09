@@ -1,0 +1,10 @@
+{
+  "status": "partial",
+  "dataset": "boolq",
+  "step": 536,
+  "steps": 929,
+  "rows": 7427,
+  "last_loss": 0.49067,
+  "adapter_dir": "/lora/v2-boolq",
+  "merged": false
+}
