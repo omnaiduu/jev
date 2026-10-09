@@ -2,7 +2,7 @@
 
 8 October 2026. Model: `unsloth/gemma-4-E4B-it`, the Unsloth copy of `google/gemma-4-E4B-it`. Hardware for the scores: one Modal L40S. No adapter is loaded in the numbers below.
 
-This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ’s LoRA is training from the frozen base. The other three adapters are not started. A keep decision is not in this post. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
+This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ’s LoRA has finished one epoch at `/lora/v2-boolq` and has not been scored yet. The other three adapters are not started. A keep decision is not in this post. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
 
 ## What the system returns
 
@@ -315,6 +315,27 @@ merged false
 The process then started a second chunk on a fresh AdamW and loaded that checkpoint. The log line is `resumed at step 536/929`. The next printed batch, step 551, is loss 0.0018 at learning rate 0.000098. That is an easy batch at the post-warmup rate, which has already cosine-decayed from `2e-4` to about `1e-4`. It is not evidence that the resumed model has letter NLL near zero. The plain-test median is 0.0001, so batches like this exist before any update.
 
 What the checkpoint establishes: the adapter directory is the BoolQ one, the Phase 2 and Phase 5 directories were not the save target, and the weights are not merged into the base. 393 steps remain. The test score still waits on step 929.
+
+## Step log: BoolQ epoch finished
+
+9 October 2026, 03:00 UTC. Exit code 0. `results/phase6/boolq/train.json`.
+
+The second chunk resumed at step 536 with a fresh AdamW and ran to step 929. No third chunk. Final print: `step 929/929 loss 1.0632 lr 0.000020`. The last batch is 3 rows, because 7,427 is not a multiple of 8 (7,424 + 3). A loss of 1.06 on three rows is one hard row, not the epoch. The learning rate at the end is `2e-5`, which is the cosine floor, `0.1 × 2e-4`.
+
+`train.json` records:
+
+- `merged: false`
+- `adapter_dir: /lora/v2-boolq`
+- `trainable_tensors: 588`, attention and MLP in the language-model stack, including `q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`, `up_proj` on layer 0 in the sample
+- `truncated_rows: 0`
+- `adapter_bytes: 326,104,278` for the whole directory, which holds both `adapter_state.pt` and `adapter_model.safetensors`, plus the tokenizer
+- `early_every_25_mean: 0.438`, the mean of the first four printed batches
+- `epoch_last_100_mean: 0.253`, the mean of the last 100 batches of the second chunk only
+- `epoch_loss_fell: true`, which is only `0.253 < 0.438`
+
+The 37 printed batches, one every 25 steps, have mean 0.308. The first 18 average 0.423. The last 19 average 0.199. The minimum print is 0.0018 and the maximum is 1.037. The sampled batches got smaller. They did not become smooth. That drop is on the training rows, which the base model already answers at a median letter NLL near zero. A lower train loss can be the model getting sharper on rows it already had, which is the overconfidence Guo describes, or it can be the model fixing misses. The test count is the only way to tell. The before-count remains 2,824 / 3,270, ECE 0.117.
+
+The score that comes next is `modal run phase6/modal_score.py --dataset boolq --weights lora`. It reads `/lora/v2-boolq`, scores the unshuffled validation file with the flip pass, scores the 2,000 calibration rows without a flip, and fits one `T` by lowest mean letter NLL on that calibration cut. Accuracy at that `T` has to match accuracy at `T = 1`. Keep still needs a correct count above 2,824 and an ECE below 0.117 at the fitted `T`.
 
 ## Reliability bins, before any adapter
 
