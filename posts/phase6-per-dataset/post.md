@@ -480,6 +480,24 @@ BoolQ at `2e-4` gained 148 on a base that was already at 86%, and held the `no` 
 - Flips fell from 400 to 40. Order sensitivity on this exam was mostly untrained, not a property of the letter softmax.
 - Same fitted `T` as BoolQ, 1.25, chosen independently on each calibration cut. Do not promote that into a global temperature.
 
+## Step log: typed-decisions training has started
+
+9 October 2026, 03:36 UTC. `modal run phase6/modal_train.py --dataset typed-decisions`. App `ap-qTU884K41QPMFzAgDhs1fn`. Fresh LoRA from `unsloth/gemma-4-E4B-it`. Not loaded from `/lora/v2-boolq` or `/lora/v2-banking77`. Rank 16, alpha 16, 588 trainable tensors. Train rows 4,000. Steps 500. Batch 8. Same schedule, learning rate `2e-4`, cosine floor `2e-5`. Save directory `/lora/v2-typed-decisions`.
+
+The loss is not one-hot. Every train row has `target_kind: soft`. The target is the stored teacher vector. If the model’s letter probabilities matched that vector exactly, the batch loss would equal the entropy of the vector, not zero. On the 4,000 train rows that entropy averages 0.750. By type: noul 0.449, choice 0.837, score 0.911. The calibration cut is 0.744 and the test file is 0.767, so the floor is about the same on all three files. A printed loss near 0.75 is “this batch matches the teacher,” not “this batch is certain.” A printed loss under 0.75 means the model is sharper than the teacher on that batch. Sharper can raise agreement with the stored mode and still be the wrong probability vector.
+
+The correct count is still the stored label, which is the mode. The teacher ceiling on the test is about 1,470 / 2,000. The plain before-count is 1,219 / 2,000, ECE 0.303. Keep needs a correct count above 1,219 and ECE below 0.303 at the fitted `T`. Beating 1,470 is not available from this file.
+
+Printed batch losses so far, one batch of eight:
+
+| completed step | batch soft NLL | learning rate |
+|---:|---:|---:|
+| 1 | 3.0064 | 0.000002 |
+| 26 | 1.0772 | 0.000052 |
+| 51 | 0.9801 | 0.000102 |
+
+Step 1 is about four times the entropy floor. Step 51 is one batch a little above the floor, still inside warmup. The learning rate has not reached `2e-4` yet. These three numbers are not the curve.
+
 ## Reliability bins, before any adapter
 
 Same five files, ten equal-width bins of top-letter probability, the same binning as the ECE. No row on any test put less than 0.2 on its chosen letter. BoolQ never went below 0.5.
