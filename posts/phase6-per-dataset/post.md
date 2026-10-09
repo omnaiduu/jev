@@ -2,7 +2,7 @@
 
 8 October 2026. Model: `unsloth/gemma-4-E4B-it`, the Unsloth copy of `google/gemma-4-E4B-it`. Hardware for the scores: one Modal L40S. No adapter is loaded in the numbers below.
 
-This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores that exist today. The MultiNLI plain score is still waiting on a GPU. None of the four LoRAs has been trained yet. A keep decision is not in this post.
+This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. None of the four LoRAs has been trained yet. A keep decision is not in this post. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
 
 ## What the system returns
 
@@ -127,7 +127,23 @@ Same prompt, right padding, last real token, `T = 1`, base weights.
 |---|---:|---:|---:|---:|---:|
 | BoolQ validation | 2,824 / 3,270 | 0.864 | 0.117 | 0.248 | 86 / 3,270 |
 | Banking77 test | 2,547 / 3,076 | 0.828 | 0.120 | 0.285 | 400 / 3,076 |
+| MultiNLI matched validation | 7,393 / 9,815 | 0.753 | 0.183 | 0.419 | 1,051 / 9,815 |
 | typed-decisions test | 1,219 / 2,000 | 0.610 | 0.303 | 0.661 | 305 / 2,000 |
+| SNLI validation, transfer only | 6,140 / 9,842 | 0.624 | 0.349 | 0.715 | 727 / 9,842 |
+
+The base model is already well above a random pick. These rows are the before-count. A later LoRA has to pass them.
+
+A random letter on BoolQ is half the validation set, 1,635 / 3,270. Plain Gemma is at 2,824 / 3,270. A random letter on Banking77, twenty names on every row, is about 154 / 3,076. Plain Gemma is at 2,547 / 3,076. The intent name is written in the prompt, and one forward pass is enough to match the customer sentence to that name. A random letter on typed-decisions, using the real option counts, is about 635 / 2,000. Plain Gemma is at 1,219 / 2,000. The teacher repeats its own stored letter about 1,470 / 2,000 times, so 1,219 is most of the way from a guess to that ceiling and still about 250 questions short of it.
+
+No LoRA produced these counts. The older 1,289 / 2,000 is the same plain weights on the same 2,000 questions with the old line `A. {id}: {text}`. The 70-question difference is the prompt. BoolQ and Banking77 set a high bar for training. MultiNLI sets it at 7,393 / 9,815. typed-decisions sets the bar at 1,219, with 1,470 as the limit of agreeing with the file. SNLI, 6,140 / 9,842, is the transfer before-count and is not a keep row.
+
+The three columns are three different measurements.
+
+The correct count is how often the chosen letter is the letter in the answer key. On BoolQ and Banking77 that key is the dataset’s own label. On typed-decisions it is the teacher’s stored letter.
+
+ECE is how far the percentage on that chosen letter sits from the hit rate. The hit rate is the correct count as a fraction: BoolQ is right on about 86 of every 100 rows. Questions are grouped by the percentage the model stated, and each group is checked against how often that group was actually right. BoolQ’s ECE is 0.117, about a 12-point gap. Banking77 is 0.120. typed-decisions is 0.303, about a 30-point gap, and the stated percentage sits above the hit rate. The model is more sure on those rows than its results.
+
+The flip count is how often the chosen answer changes when the same words are moved to different letters. It is a position report. BoolQ changes on 86 / 3,270 rows, so the letter is following `yes` and `no`. Banking77 changes on 400 / 3,076. typed-decisions changes on 305 / 2,000. The keep rule does not use this count.
 
 ECE is the expected calibration error of the top-letter percentage against whether that letter was right, in ten equal-width bins. Brier is the mean squared error of the full percentage vector against a one-hot label. On typed-decisions that one-hot is the stored teacher label.
 
@@ -160,10 +176,41 @@ A kept typed-decisions LoRA will mean the model moved closer to the teacher on t
 
 A miss on one dataset stays on that dataset.
 
-## What is not in the table yet
+## Step log: plain MultiNLI and plain SNLI
 
-MultiNLI matched validation, 9,815 rows, is the remaining plain score. The same job scores the 9,842 SNLI rows with the base weights. That job was still waiting for an L40S when this post was written.
+Finished 8 October 2026, 12:35 UTC. One Modal call, base weights, no LoRA. The call scored MultiNLI matched validation and, in the same process, the SNLI validation file. Right padding. Last content token. `T = 1`. Prompt hash `06bf695261cfc389a19f9b5b0476e0c9cb1d6384c98869068a6a49ea1d22b79b`. Truncated rows: 0. Padding asserts: 19,630 on MultiNLI and 19,684 on SNLI, which is two passes each, original order and reversed order.
 
-After that score, four LoRAs are trained from the base, one at a time. Each is scored with the same code path as the plain run. Temperature is fit on that dataset’s 2,000 calibration rows, grid 0.50 to 3.00 in steps of 0.05, lowest mean letter negative log likelihood. A question type missing from calibration would stay at `T = 1`. typed-decisions calibration has all three types, so none of its test rows are forced to stay at 1 for that reason. Accuracy at the chosen `T` must match accuracy at `T = 1`. ECE is then recomputed at the chosen `T`. The keep table is four rows.
+### What the run did
 
-The result files for the scores above are `results/phase6/boolq/plain.json`, `results/phase6/banking77/plain.json`, and `results/phase6/typed-decisions/plain.json`. The procedure is `PROTOCOL.md`. The implementation is `phase6/`.
+`modal run phase6/modal_score.py --dataset multinli --weights plain` loaded `unsloth/gemma-4-E4B-it`, built each batch with an explicit right pad, and aborted if `mask.sum() - 1` was not the last 1 in the mask. It did not. The letters were read at that index. Files: `results/phase6/multinli/plain.json` and `results/phase6/snli/plain.json`.
+
+### What it found
+
+MultiNLI matched validation: 7,393 / 9,815 correct. Accuracy 0.753. ECE 0.183. Brier 0.419. Reversing entailment, neutral, and contradiction changed the chosen label on 1,051 / 9,815 rows, 10.7%.
+
+SNLI validation, same three words, plain weights, full file after dropping 158 unlabeled rows: 6,140 / 9,842 correct. Accuracy 0.624. ECE 0.349. Brier 0.715. Flips: 727 / 9,842, 7.4%.
+
+A uniform draw over three labels is about 3,272 / 9,815 on MultiNLI and about 3,281 / 9,842 on SNLI. Both scores are above that. MultiNLI is about 2.3 times a uniform draw. SNLI is about 1.9 times.
+
+### What it means
+
+The three label words are not the skill. MultiNLI and SNLI print the same options, `entailment`, `neutral`, and `contradiction`, under the same system line. Plain Gemma is 13 points higher on MultiNLI than on SNLI, and SNLI’s ECE is almost twice MultiNLI’s. The stated percentage on SNLI sits much farther from the hit rate. Same letters, different sentences, different calibration.
+
+This SNLI file is the full validation split, 9,842 labeled rows. The retired run’s SNLI number, 1,820 / 2,000, was a 2,000-row sample scored after the mixed LoRA, with choice temperature 1.30. Those two fractions do not share a denominator. The new before-count for transfer is 6,140 / 9,842 at `T = 1` on the plain model. The MultiNLI LoRA, when it exists, is the model that gets compared with that count. The comparison does not enter the keep bit.
+
+MultiNLI’s before-count for the keep bit is 7,393 / 9,815, ECE 0.183. A later LoRA is kept on this dataset only if the correct count rises above 7,393 and ECE falls below 0.183 on this same test.
+
+The flip rates, 10.7% and 7.4%, say the chosen word usually survives a reversal of the three lines. The position report is quieter here than on Banking77 (13.0%) and typed-decisions (15.3%). BoolQ remains the quietest, 2.6%, because `yes` and `no` are hard to confuse with a slot.
+
+### Blog lines from this step
+
+- Same three words, two datasets: 7,393 / 9,815 on MultiNLI, 6,140 / 9,842 on SNLI. The label list is not the task.
+- The plain model is already a 75% entailment judge on the official matched set. Training has to beat that, not beat one third.
+- SNLI is the over-sure plain score: right on 62% of rows, ECE 0.349. A later LoRA that reaches a high count with a low ECE is a change in both accuracy and calibration. A high count alone is the mistake the old 1,820 / 2,000 could not catch, because the plain count was never written down.
+- Do not put 1,820 / 2,000 next to 6,140 / 9,842 as if they were the same exam.
+
+## What is still ahead
+
+Four LoRAs, trained from the base, one at a time, in this order: BoolQ, Banking77, typed-decisions, MultiNLI. MultiNLI is last because its train file is 390,571 rows, about 48,822 steps at batch 8. Each LoRA is then scored with the same code path as the plain run. Temperature is fit on that dataset’s 2,000 calibration rows, grid 0.50 to 3.00 in steps of 0.05, lowest mean letter negative log likelihood. typed-decisions calibration has yes/no, choice, and score, so none of its test types are forced to stay at `T = 1` for lack of rows. Accuracy at the chosen `T` must match accuracy at `T = 1`. ECE is recomputed at the chosen `T`. The keep table is four rows. SNLI is scored again with the MultiNLI LoRA and stays out of the bit.
+
+The procedure is `PROTOCOL.md`. The implementation is `phase6/`.
