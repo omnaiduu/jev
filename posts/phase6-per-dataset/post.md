@@ -2,7 +2,7 @@
 
 8 October 2026. Model: `unsloth/gemma-4-E4B-it`, the Unsloth copy of `google/gemma-4-E4B-it`. Hardware for the scores: one Modal L40S. No adapter is loaded in the numbers below.
 
-This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ’s LoRA has been scored. On its own test it clears both keep conditions. The other three adapters are not started, so `results/phase6/keep.json` is not written yet. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
+This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ’s LoRA and Banking77’s LoRA have both been scored. Each clears both keep conditions on its own test. typed-decisions and MultiNLI are not trained yet, so `results/phase6/keep.json` is not written yet. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
 
 ## What the system returns
 
@@ -437,6 +437,48 @@ merged false
 The 39 printed batches average 0.301. The first 19 average 0.439. The last 20 average 0.170. The noisiest print is 1.642, still under `log(20) = 2.996`, and under the plain-test mean of 1.109 for most of the run. The training loss fell on the rows the base already answers well. The keep measurement is still the official test: above 2,547 / 3,076 and ECE below 0.120 at the fitted `T`.
 
 The score that comes next is `modal run phase6/modal_score.py --dataset banking77 --weights lora`. Same path as BoolQ: right pad, last content token, flip pass, temperature fit on the 2,000 calibration rows.
+
+## Step log: Banking77 LoRA scored
+
+9 October 2026, 03:28 UTC. Exit code 0. App `ap-sOzZfKP7pe1TNoQ1QJKErv`. Files: `results/phase6/banking77/lora.json`, `lora_test.jsonl`, `lora_calibration.jsonl`. Adapter `/lora/v2-banking77` on `unsloth/gemma-4-E4B-it`. Right padding. Prompt hash unchanged. Padding asserts 6,152, which is 3,076 rows twice. Truncated rows: 0.
+
+### The keep comparison
+
+| | correct | accuracy | ECE | Brier |
+|---|---:|---:|---:|---:|
+| plain, `T = 1` | 2,547 / 3,076 | 0.828 | 0.120 | 0.285 |
+| LoRA, `T = 1` | 2,958 / 3,076 | 0.962 | 0.019 | 0.064 |
+| LoRA, `T = 1.25` | 2,958 / 3,076 | 0.962 | 0.007 | 0.062 |
+
+The correct count rose by 411. ECE at the fitted `T` fell from 0.120 to 0.007. Both keep conditions hold. Accuracy at `T = 1.25` equals accuracy at `T = 1`. This is the second keep row. `results/phase6/keep.json` still waits on typed-decisions and MultiNLI.
+
+Calibration, 2,000 rows, was not shuffled. Accuracy 0.959 at both temperatures. Letter NLL 0.151 at `T = 1`, 0.142 at `T = 1.25`. Calibration ECE 0.020 then 0.007. Same pattern as BoolQ: the weights did most of the calibration, and `T = 1.25` did the rest. The grid picked the same scalar as BoolQ. That is a coincidence of this grid, not a shared temperature we imposed.
+
+### Where the 411 came from
+
+2,521 rows were right before and after. 437 misses became hits. 26 hits became misses. 92 were wrong both times. 496 rows changed intent. The net is 437 − 26 = 411.
+
+The plain model’s worst intent was `get_physical_card`, 4/40, and the substitutions were `passcode_forgotten` and `change_pin`. After the update that intent is 40/40. The near-duplicate charges moved with it: `top_up_by_bank_transfer_charge` 15/40 to 38/40, `top_up_by_card_charge` 18/40 to 38/40, `exchange_via_app` 22/39 to 38/39, `beneficiary_not_allowed` 13/40 to 37/40. Twenty-one of the 77 intents are now perfect on this file. Ten were perfect before.
+
+The remaining misses are small and still near-duplicates: `wrong_exchange_rate_for_cash_withdrawal` called `cash_withdrawal_charge` (4), `declined_transfer` called `declined_card_payment` (3), `topping_up_by_card` called `top_up_reverted` (3). The worst recall left is `declined_transfer` at 32/40, up from 27/40. One intent slipped by a single row: `pending_transfer` 36/39 to 35/39. A confusion still only counts when the other name was one of the 19 stored distractors.
+
+### Position and confidence
+
+Flips went from 400 / 3,076 (13.0%) to 40 / 3,076 (1.3%). The median margin on a remaining flip is 0.55. Unlike BoolQ, the flips that remain are not the near-ties. There are just far fewer of them. The flip count is still not the keep bit. Here it moved in the same direction as the correct count.
+
+Mean letter NLL fell from 1.109 to 0.140. Median NLL is 0.001. Mean top-letter probability is 0.980, and on a miss it is 0.839. 79% of rows are above 0.99. The top bin is 2,918 / 3,076 rows, hit rate 0.980, mean probability 0.993. The model got more sure and more right at the same time, which is why ECE fell even though the probabilities got sharper. The plain model was sure and wrong. This one is sure and right on 96% of the file.
+
+### What this says about the learning rate
+
+BoolQ at `2e-4` gained 148 on a base that was already at 86%, and held the `no` recall. Banking77 at the same rate gained 411 on a base that was already at 83%, including the intent that looked least like a near-duplicate. Two datasets are not a sweep. They are enough to say the high rate did not walk the base off these two tests. typed-decisions is the different case: the plain count is 1,219 / 2,000, the teacher ceiling is about 1,470 / 2,000, and the loss is the stored probability vector rather than a one-hot. That run stays at `2e-4`, rank 16, one epoch, from the frozen base.
+
+### Blog lines from this step
+
+- 2,547 / 3,076 to 2,958 / 3,076. ECE 0.120 to 0.007 at `T = 1.25`. The 20-way list was learnable past the plain model.
+- `get_physical_card` went from 4/40 to 40/40. The correct count hid that. The per-intent table is the result.
+- 437 fixed, 26 broken. The adapter barely spends the plain model’s hits.
+- Flips fell from 400 to 40. Order sensitivity on this exam was mostly untrained, not a property of the letter softmax.
+- Same fitted `T` as BoolQ, 1.25, chosen independently on each calibration cut. Do not promote that into a global temperature.
 
 ## Reliability bins, before any adapter
 
