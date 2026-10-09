@@ -2,7 +2,7 @@
 
 8 October 2026. Model: `unsloth/gemma-4-E4B-it`, the Unsloth copy of `google/gemma-4-E4B-it`. Hardware for the scores: one Modal L40S. No adapter is loaded in the numbers below.
 
-This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ’s LoRA and Banking77’s LoRA have both been scored. Each clears both keep conditions on its own test. typed-decisions and MultiNLI are not trained yet, so `results/phase6/keep.json` is not written yet. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
+This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ, Banking77, and typed-decisions have each been scored, and each clears both keep conditions on its own test. MultiNLI is not trained yet, so `results/phase6/keep.json` is not written yet. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
 
 ## What the system returns
 
@@ -509,6 +509,57 @@ Step 1 is about four times the entropy floor. Step 51 is one batch a little abov
 Nineteen printed batches average 1.012. The first nine average 1.159. The last ten average 0.880. Two of the nineteen dipped under 0.75 (0.616 and 0.684). The minimum and the maximum are still single batches. The keep measurement is the 2,000-question test: above 1,219 correct, ECE below 0.303, and the teacher ceiling of about 1,470 written next to the count.
 
 The score that comes next is `modal run phase6/modal_score.py --dataset typed-decisions --weights lora`.
+
+## Step log: typed-decisions LoRA scored
+
+9 October 2026, 03:56 UTC. Exit code 0. Files: `results/phase6/typed-decisions/lora.json`, `lora_test.jsonl`, `lora_calibration.jsonl`. Adapter `/lora/v2-typed-decisions`. Right padding. Prompt hash unchanged. Padding asserts 4,000, which is 2,000 questions twice. Truncated rows: 0. The calibration cut contains choice, noul, and score, so no test type was forced to stay at `T = 1`.
+
+### The keep comparison
+
+The correct count is agreement with the stored label. A fresh teacher sample matches that stored label about 1,470 / 2,000 times. That number is how often a new draw hits the mode. It is not a cap on a student trained to emit the mode. A spread vector has a mode, and a sample at temperature 0.7 sometimes misses it. 1,572 can sit above 1,470 without the model knowing anything the file does not.
+
+| | correct | accuracy | ECE | Brier |
+|---|---:|---:|---:|---:|
+| plain, `T = 1` | 1,219 / 2,000 | 0.610 | 0.303 | 0.661 |
+| LoRA, `T = 1` | 1,572 / 2,000 | 0.786 | 0.175 | 0.343 |
+| LoRA, `T = 0.50` | 1,572 / 2,000 | 0.786 | 0.065 | 0.283 |
+
+Teacher-sample agreement, written beside the count: about 1,470 / 2,000.
+
+The correct count rose by 353. ECE at the fitted `T` fell from 0.303 to 0.065. Both keep conditions hold. Accuracy at `T = 0.50` equals accuracy at `T = 1`. This is the third keep row. `results/phase6/keep.json` waits on MultiNLI.
+
+`T = 0.50` is the bottom of the grid, which runs from 0.50 to 3.00 in steps of 0.05. The fit pinned the boundary. Calibration letter NLL is 0.596 at `T = 1` and 0.453 at `T = 0.50`. A temperature below 0.50 might lower that NLL further. This run does not extend the grid. Sharpening is the direction: at `T = 1` the mean top-letter probability is 0.611 and the accuracy is 0.786. The plain model had the opposite problem, mean probability 0.912 against accuracy 0.610. No LoRA row on this test puts more than 0.99 on the chosen letter. BoolQ and Banking77 fitted `T = 1.25` because those adapters were still a bit sharp. This one is soft, so the scalar goes the other way.
+
+By type, plain then LoRA. The correct counts do not move with `T`. The ECE at `T = 0.50` is in the last column.
+
+| type | plain correct | LoRA correct | LoRA ECE at `T = 1` | LoRA ECE at `T = 0.50` |
+|---|---:|---:|---:|---:|
+| choice | 360 / 600 | 445 / 600 | 0.162 | 0.075 |
+| noul | 376 / 600 | 516 / 600 | 0.125 | 0.074 |
+| score | 483 / 800 | 611 / 800 | 0.222 | 0.074 |
+| all | 1,219 / 2,000 | 1,572 / 2,000 | 0.175 | 0.065 |
+
+### Where the 353 came from
+
+1,088 rows were right before and after. 484 misses became hits. 131 hits became misses. 297 were wrong both times. 680 rows changed option id. The net is 484 − 131 = 353. This adapter spends more of the plain model’s hits than Banking77 did (131 against 26).
+
+Yes/no is the clearest change. The plain model said `true` on 517 of 600 noul rows, against 305 `true` labels, and was right 376 times. The LoRA says `true` 287 times and `false` 313 times, against labels 305 and 295, and is right 516 / 600. The true-prior is gone. The letters now sit on the base rate.
+
+Score still shifts. Labels versus LoRA predictions, out of 800: `0` is 124 labels and 82 predictions, `1` is 160 and 217, `2` is 252 and 267, `3` is 254 and 224, `4` is 10 and 10. The model still avoids the bottom of the scale. It no longer piles onto `3` the way the plain model did (302 predictions).
+
+Soft negative log likelihood against the stored teacher vector, on the test, is 0.844. The entropy of those vectors averages 0.767. The student is close to the teacher distribution and a little worse than an exact copy. That is a different number from the 1,572, which only asks whether the mode matches.
+
+### Position
+
+Flips went from 305 / 2,000 (15.3%) to 187 / 2,000 (9.4%). The median margin on a flipped row went from 0.70 to 0.05. The sure reversals became near-ties, which is what a soft letter distribution does when the lines swap. The flip count is not the keep bit. The margin is the part worth writing down.
+
+### Blog lines from this step
+
+- 1,219 / 2,000 to 1,572 / 2,000, beside a teacher-sample agreement of about 1,470 / 2,000. The 1,470 is a sample rate, not a cap on mode agreement.
+- The plain model was over-sure. This adapter is under-sure: probability 0.61 at accuracy 0.79. The fitted temperature is 0.50, the bottom of the grid, and it is a sharpening.
+- Yes/no went from “say true” (517 / 600) to a split that matches the labels (516 / 600 correct).
+- 484 fixed, 131 broken. A kept typed-decisions adapter still drops rows the base had right.
+- Soft loss near the teacher entropy, and a correct count that only checks the mode, are two measurements. Both belong in the post. Only the mode count enters the keep bit.
 
 ## Reliability bins, before any adapter
 
