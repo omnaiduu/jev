@@ -701,3 +701,34 @@ Do not change this run. The follow-ups that match these tables:
 - Report precision and recall per letter next to the correct count. A BoolQ gain that only converts `no` into `yes` is a different result from a gain on both letters. An SNLI transfer gain that only moves contradiction recall off 0.111 is the result worth writing down.
 - Fit `T` as specified, then look at the top bin again. If SNLI’s contradiction calls stay at probability 0.99 after MultiNLI’s `T`, the scalar did the job it can do and the prior is still in the weights.
 - The 2e-5 BoolQ rerun, already noted, should be scored with the same per-letter counts. If the high learning rate buys `yes` recall and spends `no` precision, the correct count can rise while the model becomes a yes-machine. The keep bit would pass. The per-letter table would say what was bought.
+
+## What the three keeps imply while MultiNLI trains
+
+9 October 2026. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. MultiNLI is at step 1,837 of 48,822, learning rate still `2e-4`. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
+
+| chunk | saved step | steps in the chunk | last batch loss | merged |
+|---:|---:|---:|---:|---|
+| 1 | 921 | 921 | 0.054 | false |
+| 2 | 1,837 | 916 | 0.228 | false |
+
+Both chunks wrote `/lora/v2-multinli` only. The second loaded the first. The learning rate at step 1,837 is still `0.000199`, because `(1837 - 100) / (48822 - 100)` is about 0.036 and the cosine has barely left the top.
+
+### Two directions of temperature, not one
+
+Guo et al. describe networks that are over-sure, so the fitted `T` is above 1 and it softens. BoolQ and Banking77 match that shape, mildly. At `T = 1` their ECE was already most of the way down (BoolQ 0.117 to 0.034, Banking77 0.120 to 0.019), and `T = 1.25` finished it (0.014 and 0.007). typed-decisions went the other way. After training, mean top-letter probability was 0.611 against accuracy 0.786. The fit chose `T = 0.50`, the bottom of the grid, and ECE fell from 0.175 to 0.065. A protocol that assumed every adapter wants `T > 1` would have softened a model that needed to be sharpened. The grid is what caught it. The follow-up, after the four keep bits, is to extend that one dataset’s grid below 0.50 and refit on its calibration rows only. Accuracy cannot change. The question is whether calibration NLL still falls.
+
+### The high rate did not walk off the short tasks
+
+BoolQ is 929 steps and gained 148, holding `no` recall. Banking77 is 999 steps and gained 411, including `get_physical_card` from 4/40 to 40/40. Those are the tasks where the base was already at 86% and 83%, which is where the LoRA-versus-full-fine-tuning paper says a high rate adds directions that track forgetting. On these two tests it did not. MultiNLI is about fifty times as many steps at the same rate. That is the run the warning was about. If the correct count fails to clear 7,393, or if it clears and ECE rises, the first follow-up is a shorter run or `2e-5`, scored the same way. It is not a different letter readout.
+
+### How many plain hits each adapter spent
+
+| dataset | plain hits the LoRA broke | plain misses the LoRA fixed | net |
+|---|---:|---:|---:|
+| BoolQ | 84 | 232 | +148 |
+| Banking77 | 26 | 437 | +411 |
+| typed-decisions | 131 | 484 | +353 |
+
+The one-hot tasks spent few of the base’s hits. The soft-target task spent more. MultiNLI is one-hot, so the spend is the thing to count when its score exists, next to contradiction recall. Plain contradiction recall is 0.705, with 948 misses. Entailment recall is already 0.885, with 1,064 false positives. A keep that only buys contradiction by spending entailment is still a keep. The per-letter table is what says so.
+
+SNLI’s contradiction recall of 0.111 stays outside that bit. The prediction from the plain bins still stands: MultiNLI’s temperature will be sized for a top-bin gap of 0.176, and SNLI’s gap is 0.359, so the transfer can remain over-sure.
