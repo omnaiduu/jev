@@ -498,6 +498,18 @@ Printed batch losses so far, one batch of eight:
 
 Step 1 is about four times the entropy floor. Step 51 is one batch a little above the floor, still inside warmup. The learning rate has not reached `2e-4` yet. These three numbers are not the curve.
 
+## Step log: typed-decisions epoch finished
+
+9 October 2026. The first chunk saved `/lora/v2-typed-decisions` at step 338, `last_loss` 0.910, `merged: false`, and the local status file recorded that partial. The second chunk resumed there with a fresh AdamW and reached step 500 at 03:51 UTC. Exit code 0. `results/phase6/typed-decisions/train.json`.
+
+4,000 divides by 8, so the last batch is a full eight rows. Final print: `step 500/500 loss 0.6574 lr 0.000020`. That one batch is under the train-set entropy floor of 0.750. It can be a batch of noul rows, whose own mean entropy is 0.449, or it can be a batch the model has made sharper than the teacher. One print does not say which.
+
+`merged: false`. `truncated_rows: 0`. 588 trainable tensors. Directory size 326,104,105 bytes. `early_every_25_mean` is 1.483, the first four prints, which still include the step-1 batch at 3.01. `epoch_last_100_mean` is 0.827, the last 100 batches of the second chunk only. That is above the 0.750 floor and below the early prints, so `epoch_loss_fell` is true and the model has not, on average, gone sharper than the teacher in that window.
+
+Nineteen printed batches average 1.012. The first nine average 1.159. The last ten average 0.880. Two of the nineteen dipped under 0.75 (0.616 and 0.684). The minimum and the maximum are still single batches. The keep measurement is the 2,000-question test: above 1,219 correct, ECE below 0.303, and the teacher ceiling of about 1,470 written next to the count.
+
+The score that comes next is `modal run phase6/modal_score.py --dataset typed-decisions --weights lora`.
+
 ## Reliability bins, before any adapter
 
 Same five files, ten equal-width bins of top-letter probability, the same binning as the ECE. No row on any test put less than 0.2 on its chosen letter. BoolQ never went below 0.5.
