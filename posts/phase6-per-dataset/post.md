@@ -2,7 +2,7 @@
 
 8 October 2026. Model: `unsloth/gemma-4-E4B-it`, the Unsloth copy of `google/gemma-4-E4B-it`. Hardware for the scores: one Modal L40S. No adapter is loaded in the numbers below.
 
-This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ, Banking77, and typed-decisions have each been scored, and each clears both keep conditions on its own test. MultiNLI is not trained yet, so `results/phase6/keep.json` is not written yet. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
+This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ, Banking77, and typed-decisions have each been scored, and each clears both keep conditions on its own test. MultiNLI’s LoRA is training from the frozen base and has not been scored, so `results/phase6/keep.json` is not written yet. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
 
 ## What the system returns
 
@@ -601,6 +601,25 @@ Per letter on that plain file:
 Contradiction is the precise letter and the one with recall left to gain: 948 of its rows are called something else. Entailment is already recalled at 0.885 and is the letter with 1,064 false positives. Neutral is the weak precision, 0.627. A gain that only converts those 948 contradiction misses is a different result from a gain that spends entailment precision. The correct count will not say which. The per-letter table gets written when `lora.json` exists.
 
 SNLI, same three words, stays out of the keep bit. Its plain contradiction recall is 0.111. The MultiNLI LoRA’s SNLI score is the check on whether a contradiction gain on these sentences moves that 0.111. The before-count for that check is 6,140 / 9,842, ECE 0.349, at `T = 1` on the plain model. The temperature applied to SNLI will be the one fit on MultiNLI calibration, not a temperature fit on SNLI.
+
+## Step log: MultiNLI checkpoint at step 921
+
+9 October 2026, 08:59 UTC. `results/phase6/multinli/train_status.json`.
+
+```
+status partial
+step 921 / 48822
+rows 390571
+last_loss 0.053545
+adapter_dir /lora/v2-multinli
+merged false
+```
+
+921 is 1.9% of the epoch. `last_loss` is the last batch of the chunk, an easy one. The 37 printed batches in this chunk average 0.537. The first half of those prints average 0.580 and the second half 0.497. Five prints are above `log(3) = 1.099`. The sampled batches got a little smaller and stayed noisy. The plain-test mean is 0.943, so this chunk’s prints are already under the test mean, which is what a base model at 75% produces on easy batches. It is not evidence the test count has moved.
+
+The learning rate on the prints through step 1,026, after the resume, is still `0.000200`. With 48,822 steps the cosine does not leave `2e-4` in the first thousand. The second chunk resumed at step 921 with a fresh AdamW. The next print, step 926, is loss 0.6415 at that same rate. The adapter directory is `/lora/v2-multinli`. It is not merged.
+
+At this chunk size the epoch is on the order of fifty resumes. Each one reloads the base and this adapter. The keep measurement is still 7,393 / 9,815 and ECE 0.183, and it waits on step 48,822.
 
 ## Reliability bins, before any adapter
 
