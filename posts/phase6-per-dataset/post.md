@@ -428,6 +428,16 @@ merged false
 
 `last_loss` is the last batch of the chunk. 0.85 is under the plain-test mean of 1.109 and under `log(20)`. It is still one batch. The second chunk resumed at step 829 with a fresh AdamW. The next print, step 851, is loss 0.0279 at learning rate 0.000032, which is an easy batch near the cosine floor. 170 steps remain. The test score waits on step 999.
 
+## Step log: Banking77 epoch finished
+
+9 October 2026, 03:23 UTC. Exit code 0. `results/phase6/banking77/train.json`. The second chunk resumed at step 829 and ran to step 999. No third chunk. Final print: `step 999/999 loss 0.0047 lr 0.000020`. The last batch is 3 rows (7,987 = 998 × 8 + 3). A loss of 0.005 on three rows is an easy batch at the cosine floor, `2e-5`. It is not the epoch mean.
+
+`train.json` records `merged: false`, `adapter_dir: /lora/v2-banking77`, 588 trainable tensors, `truncated_rows: 0`, directory size 326,104,302 bytes. `early_every_25_mean` is 1.151, the first four printed batches. `epoch_last_100_mean` is 0.157, the last 100 batches of the second chunk only. `epoch_loss_fell` is that comparison, 0.157 < 1.151.
+
+The 39 printed batches average 0.301. The first 19 average 0.439. The last 20 average 0.170. The noisiest print is 1.642, still under `log(20) = 2.996`, and under the plain-test mean of 1.109 for most of the run. The training loss fell on the rows the base already answers well. The keep measurement is still the official test: above 2,547 / 3,076 and ECE below 0.120 at the fitted `T`.
+
+The score that comes next is `modal run phase6/modal_score.py --dataset banking77 --weights lora`. Same path as BoolQ: right pad, last content token, flip pass, temperature fit on the 2,000 calibration rows.
+
 ## Reliability bins, before any adapter
 
 Same five files, ten equal-width bins of top-letter probability, the same binning as the ECE. No row on any test put less than 0.2 on its chosen letter. BoolQ never went below 0.5.
