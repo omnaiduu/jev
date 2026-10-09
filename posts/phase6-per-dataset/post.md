@@ -2,7 +2,7 @@
 
 8 October 2026. Model: `unsloth/gemma-4-E4B-it`, the Unsloth copy of `google/gemma-4-E4B-it`. Hardware for the scores: one Modal L40S. No adapter is loaded in the numbers below.
 
-This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. None of the four LoRAs has been trained yet. A keep decision is not in this post. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
+This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ’s LoRA is training from the frozen base. The other three adapters are not started. A keep decision is not in this post. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
 
 ## What the system returns
 
@@ -214,3 +214,85 @@ The flip rates, 10.7% and 7.4%, say the chosen word usually survives a reversal 
 Four LoRAs, trained from the base, one at a time, in this order: BoolQ, Banking77, typed-decisions, MultiNLI. MultiNLI is last because its train file is 390,571 rows, about 48,822 steps at batch 8. Each LoRA is then scored with the same code path as the plain run. Temperature is fit on that dataset’s 2,000 calibration rows, grid 0.50 to 3.00 in steps of 0.05, lowest mean letter negative log likelihood. typed-decisions calibration has yes/no, choice, and score, so none of its test types are forced to stay at `T = 1` for lack of rows. Accuracy at the chosen `T` must match accuracy at `T = 1`. ECE is recomputed at the chosen `T`. The keep table is four rows. SNLI is scored again with the MultiNLI LoRA and stays out of the bit.
 
 The procedure is `PROTOCOL.md`. The implementation is `phase6/`.
+
+## Research while BoolQ trains
+
+This section is not a result. The BoolQ LoRA was started after the plain scores, from the frozen base, rank 16, alpha 16, learning rate `2e-4`, one epoch. Nothing below changes that run. These are the changes worth trying only after the four keep bits exist.
+
+The plain scores already say where the headroom is. BoolQ is 2,824 / 3,270 with ECE 0.117. Banking77 is 2,547 / 3,076 with ECE 0.120. MultiNLI is 7,393 / 9,815 with ECE 0.183. typed-decisions is 1,219 / 2,000 with ECE 0.303, under a teacher ceiling of about 1,470 / 2,000. SNLI, same three words as MultiNLI, is 6,140 / 9,842 with ECE 0.349. The letter readout is already doing the yes/no and the banking-intent jobs. The open problems are calibration on typed-decisions and SNLI, and whether a weight update can beat a base model that is already far above a uniform draw.
+
+Temperature scaling is the calibration tool this protocol already uses, and the literature says to keep it post-hoc. Guo et al. (2017) fit one scalar on held-out logits by negative log likelihood. Dividing every logit by that scalar does not change the argmax. FIRST (EMNLP 2024, `2024.emnlp-main.703`) compares that with label smoothing on letter-style choices and finds smoothing can swap the top two tokens, while temperature keeps the ranking and still moves ECE. Their grid is a different range from ours, and they sometimes pick the scalar by ECE rather than by NLL. Our fit is Guo’s objective: lowest mean letter NLL on the calibration cut, grid 0.50 to 3.00. If that `T` lowers NLL and the test ECE does not fall, the keep bit fails even though the letters got more accurate. That is a reason to report both ECE at `T = 1` and ECE at the fitted `T`, which the scorer already stores. It is not a reason to fit `T` on the test.
+
+The learning rate is the risk on BoolQ and Banking77. A NeurIPS 2025 study of LoRA versus full fine-tuning (`ff541950d1e885af90f523571564a401`) sweeps learning rate on MNLI and finds higher rates add directions in the update that are absent from the pretrained weights. Those directions track forgetting. Test accuracy does not track them. Their prescription is a smaller rate when the base is already aligned, and separate adapters rather than one merged stack. Our old typed-decisions result is the same shape: at the last real token the first LoRA was 1,208 / 2,000 and plain Gemma was 1,289 / 2,000. The base had not been trained on that exam, and the update still lost. Here the base has already seen the words `yes`, `no`, and the banking intent names inside a pretrained corpus, and the plain counts are 86% and 83%. One epoch at `2e-4` can walk off that. The next run, after this one is scored, should repeat BoolQ at `2e-5` (the Phase 5 rate) and stop when calibration NLL stops falling. The 2,000 calibration rows are legal for that stop. The test rows are not.
+
+Separate adapters match the same paper’s continual-learning result. They train one task, merge, then the next task, and the merged LoRA forgets faster than full fine-tuning because each task adds its own extra directions. Four directories, `/lora/v2-boolq` through `/lora/v2-typed-decisions`, never merged, is the setup that avoids that. A later product that wants one adapter has to train the mixture on purpose and score every dataset again. Adding the four adapters together is not that experiment.
+
+typed-decisions already trains on the teacher’s probability vector, not a one-hot. FIRST’s warning still applies: a teacher sampled at temperature 0.7 is itself miscalibrated, and distilling those probabilities passes the miscalibration on. The stored vector is what this protocol trains. A follow-up can divide that vector’s logits by a teacher temperature before the loss, fit on the calibration cases only, and see whether the student’s ECE on the 2,000 test questions moves. The correct count would still be agreement with the stored label, and the ceiling would still be about 1,470 / 2,000.
+
+A February 2026 note, arXiv `2602.02855`, argues that a strongly pretrained initialization can slow LoRA even when the downstream task is aligned. BoolQ is the dataset to watch for that. If the BoolQ LoRA fails to clear 2,824 / 3,270, the first explanation to test is the step size, not the letter softmax.
+
+Sources: Guo et al., “On Calibration of Modern Neural Networks,” 2017. He et al., FIRST, EMNLP 2024. Shuttleworth et al., “LoRA vs Full Fine-tuning: An Illusion of Equivalence,” NeurIPS 2025. “When pre-training hurts LoRA fine-tuning,” arXiv:2602.02855. Xie et al., “Calibrating Language Models with Adaptive Temperature Scaling,” EMNLP 2024 (`2024.emnlp-main.1007`).
+
+## What the saved letter logits say
+
+9 October 2026. This is a reading of the five `plain_test.jsonl` files already on disk. No new GPU job. Each line stores the letter logits at the last content token, at `T = 1`, before any adapter. Letter negative log likelihood is `-(one-hot * log softmax(letter logits))`, the same quantity the trainer averages over a batch.
+
+| test | mean NLL | median NLL | mean top-letter probability | top-letter probability on a miss | chance NLL |
+|---|---:|---:|---:|---:|---:|
+| BoolQ | 0.772 | 0.0001 | 0.981 | 0.938 | 0.693 (2 letters) |
+| Banking77 | 1.109 | 0.0003 | 0.947 | 0.828 | 2.996 (20 letters) |
+| MultiNLI | 0.943 | 0.018 | 0.936 | 0.881 | 1.099 (3 letters) |
+| SNLI | 2.331 | 0.018 | 0.971 | 0.965 | 1.099 (3 letters) |
+| typed-decisions | 1.703 | 0.116 | 0.912 | 0.867 | depends on the row |
+
+Chance NLL is `log(number of letters)`, the loss of a uniform softmax. It is a scale, not a target.
+
+### BoolQ is two different models glued together
+
+On the 2,824 correct validation rows the mean letter NLL is 0.014 and the mean top-letter probability is 0.988. On the 446 misses the mean letter NLL is 5.57 and the mean top-letter probability is still 0.938. The median row in the whole file has NLL 0.0001. 83% of rows put more than 0.99 on the chosen letter.
+
+The mean, 0.772, is worse than a coin flip’s 0.693. Accuracy is 86%. Both numbers are true because the mean is the 446 confident misses. A model that stated its own accuracy, probability 0.864 on the chosen letter every time, would have letter NLL about 0.40. The file’s mean is about twice that.
+
+ECE is 0.117 and the gap between mean top-letter probability and accuracy is also 0.117 (0.981 − 0.864). With 10 equal-width bins, a mass of rows above 0.9 all fall in the top bin, so the bin gap is almost the whole ECE. Temperature’s job on this file is to pull 0.98 toward 0.86. It cannot repair the 446. The keep rule already says so: the correct count has to rise, and ECE has to fall. A fitted `T` can only do the second half.
+
+### The same shape, sharper on SNLI
+
+SNLI’s mean top-letter probability is 0.971 when the letter is right and 0.965 when it is wrong. The model does not mark its misses. Mean letter NLL is 2.33, which is worse than `log(3) = 1.10`, while accuracy is 62%, which is better than one third. That is the over-sure score in one pair of numbers. MultiNLI, same three words, has mean NLL 0.943, just under `log(3)`, and the miss confidence is 0.881 rather than 0.965. The wording changes how sure the miss is, not only how often the letter is right.
+
+Banking77’s mean NLL, 1.11, is far under `log(20)`. The 20-way job is not a guess. The misses are less sure than BoolQ’s misses (0.83 versus 0.94), which is why a 20-way error hurts the loss without looking like a BoolQ error.
+
+typed-decisions sits in between: median NLL 0.12, not ~0, and miss confidence 0.87. The teacher ceiling, about 1,470 / 2,000, is still the cap on the correct count. The logit reading says the percentages are already too sharp for a 61% hit rate.
+
+### What this does to the printed training loss
+
+The trainer prints one batch of eight, every 25 steps. It does not print a running mean. On BoolQ, one miss at NLL 5.57, averaged with seven rows near 0, prints about 0.70. Two such misses print about 1.4. A batch with no miss prints near 0. A line that says `loss 0.06` and a line that says `loss 0.78` can both be the same model. The curve that matters is `losses_every_25` in the checkpoint, read as a noisy batch sample, and then the test correct count.
+
+Guo et al. (appendix) show that continued training drives the softmax toward low entropy and that this is the overconfidence temperature later undoes. These five files are already in that state, before any LoRA step. One-hot letter cross-entropy puts almost all of the gradient on the confident misses. On BoolQ that is about 14% of rows. A learning rate of `2e-4` on that subset is the risk named in the previous section. This logit reading is why. It is not a change to the run.
+
+Xie et al. (EMNLP 2024, adaptive temperature scaling) find that one scalar `T` is a weak fix for a full-vocabulary language model after RLHF, because different tokens want different temperatures. The object we score is not that. It is a K-way classifier at one position. Guo’s classification result fits it better: their vector scaling collapsed to a scalar, so one temperature was enough. A per-token calibration head is a later experiment, and only if one `T` fails to move ECE on these letter logits.
+
+## Step log: BoolQ training has started
+
+9 October 2026, about 02:43 UTC. `modal run phase6/modal_train.py --dataset boolq`. App `ap-bhgZVaqkTuJD3Xl6T5HECG`. Base `unsloth/gemma-4-E4B-it`. No load from `/lora/adapter` or `/lora/adapter-pass2`. Rank 16, alpha 16, dropout 0, text and attention and MLP only. 588 trainable tensors. The first sampled names are `q_proj` and `k_proj` LoRA matrices in language-model layer 0. Vision and audio were not in the sample, and `text_only_names` rejects those names before the step loop.
+
+Train rows: 7,427. Batch 8. Steps in the epoch: 929. Warmup: 100 steps, linear from `2e-6` at step 0 to `2e-4` at step 99. After that, cosine from `2e-4` down toward `2e-5`. Fresh AdamW inside each chunk of about 8 minutes. The learning rate follows the global step. Checkpoint directory: `/lora/v2-boolq` on volume `phase6-lora`. This log is from the first chunk, before that checkpoint is the thing we score.
+
+Printed batch losses, one batch of eight, not a mean:
+
+| completed step | batch letter NLL | learning rate |
+|---:|---:|---:|
+| 1 | 0.6262 | 0.000002 |
+| 26 | 0.0569 | 0.000052 |
+| 51 | 0.2908 | 0.000102 |
+| 76 | 0.7799 | 0.000152 |
+| 101 | 0.1028 | 0.000200 |
+| 126 | 0.4753 | 0.000200 |
+| 151 | 0.2715 | 0.000198 |
+
+Step 101 is the first print after warmup. The learning rate is `2e-4` there, which is the protocol rate. Step 26 at 0.057 is an easy batch: the plain-test median is 0.0001, so a batch of rows the base already knows prints near zero even at a tiny step size. Step 76 at 0.780 is about one confident miss inside the eight, the same scale as the plain-test mean of 0.772. It is not evidence that the update got worse between step 51 and step 76.
+
+### What to watch when the epoch ends
+
+The before-count is 2,824 / 3,270, ECE 0.117, at `T = 1`. Keep needs a higher correct count and a lower ECE at the fitted `T`. The logit reading says most of the headroom is the confident misses, and that a higher correct count can still raise ECE if the remaining misses get sharper. Both halves of the keep bit have to be read. Accuracy at the fitted `T` must equal accuracy at `T = 1`.
+
+The other three trainings stay queued behind this one. One GPU at a time.
