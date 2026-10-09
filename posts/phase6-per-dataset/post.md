@@ -320,3 +320,45 @@ typed-decisions has the same break. The 0.8–0.9 bin is 208 rows, stated probab
 One temperature moves every row’s probability toward uniform together. It can pull SNLI’s 0.99 toward 0.63, and it can pull BoolQ’s 0.995 toward 0.887. It cannot make the 0.5–0.9 band start ranking hits, because those rows are not ordered by accuracy in the first place. Guo et al. still apply to the dominant bin, which is why the protocol fits one `T`. The bin table says what that `T` will not fix.
 
 A prediction for the later SNLI transfer score: MultiNLI’s top-bin gap is 0.176 and SNLI’s is 0.359. The `T` fit on MultiNLI calibration will be the one applied to SNLI. It will be sized for the milder gap. SNLI can stay over-sure after that transfer. That comparison stays out of the keep bit. It is the check on whether one dataset’s temperature is a property of the three label words. The bin table says it is not.
+
+## The misses are not close calls
+
+Same files. A flip is a row whose chosen option id changes when the option lines are reversed. The margin is the gap between the top letter’s probability and the second letter’s, on the original order.
+
+| test | flips | median margin on a flip | flips with margin under 0.2 |
+|---|---:|---:|---:|
+| BoolQ | 86 / 3,270 | 0.60 | 17 |
+| Banking77 | 400 / 3,076 | 0.71 | 59 |
+| MultiNLI | 1,051 / 9,815 | 0.60 | 176 |
+| SNLI | 727 / 9,842 | 0.81 | 65 |
+| typed-decisions | 305 / 2,000 | 0.70 | 51 |
+
+The flipped rows are sure. On SNLI the median flipped row still has a gap of 0.81 between the first letter and the second. Seventeen of BoolQ’s 86 flips are the close ones, margin under 0.2. The rest flipped while the model was already committed. Position bias here is not a tie. Reversing the lines moves a letter the model had already scored well above the other.
+
+That matters for the keep bit. A later LoRA that cuts the flip count is more stable under order. The protocol does not keep an adapter for that. The flip count stays a separate report. A cut in flips with no rise in correct count is not a keep.
+
+### Which letter the miss uses
+
+BoolQ validation is 2,033 `yes` and 1,237 `no`. The plain model says `yes` 1,857 times and `no` 1,413 times. Precision on `yes` is 0.927, recall 0.847. Precision on `no` is 0.780, recall 0.891. Of the 446 misses, 311 are a `no` on a `yes` passage. The error is the model refusing a passage that the label accepts.
+
+SNLI is not a three-way judge that happens to be 62% right. It declines to say `contradiction`.
+
+| SNLI label | times chosen | precision | recall |
+|---|---:|---:|---:|
+| contradiction | 367 | 0.989 | 0.111 |
+| entailment | 3,581 | 0.853 | 0.917 |
+| neutral | 5,894 | 0.462 | 0.842 |
+
+Support is nearly even: 3,278 contradiction, 3,329 entailment, 3,235 neutral. The model says contradiction 367 times. When it does, it is right 363 of those times. It misses 2,915 contradiction rows. Neutral is the dump: 5,894 calls, precision 0.462, and 3,170 of the misses are a neutral call. The stated probability on those calls sits in the 0.9–1.0 bin with the rest of the file. The ECE of 0.349 is a confident neutral prior, not a diffuse three-way uncertainty.
+
+MultiNLI, same three words, does not do this. Contradiction recall there is 0.705 (2,265 true positives, 948 misses), precision 0.941. Entailment recall is 0.885. Neutral precision is 0.627, not 0.462. The plain model knows the word `contradiction` on MultiNLI sentences and withholds it on SNLI sentences. A MultiNLI LoRA that raises MultiNLI’s contradiction recall can still leave SNLI’s 0.111 where it is. That is the transfer question, and it stays outside the keep bit.
+
+typed-decisions yes/no is the same prior in a smaller file. Of 600 noul rows, 305 are labeled `true` and 295 `false`. The plain model says `true` on 517 of them. The correct count on that slice is 376 / 600. Score rows, 800 of them, shift toward the middle: `0` is the label 124 times and the prediction 63 times, `3` is the label 254 times and the prediction 302 times, `4` is rare on both sides (10 labels, 11 predictions). The correct count on score is 483 / 800. The teacher ceiling, about 1,470 / 2,000 on the whole test, still bounds the sum.
+
+### What to try after the four keep bits
+
+Do not change this run. The follow-ups that match these tables:
+
+- Report precision and recall per letter next to the correct count. A BoolQ gain that only converts `no` into `yes` is a different result from a gain on both letters. An SNLI transfer gain that only moves contradiction recall off 0.111 is the result worth writing down.
+- Fit `T` as specified, then look at the top bin again. If SNLI’s contradiction calls stay at probability 0.99 after MultiNLI’s `T`, the scalar did the job it can do and the prior is still in the weights.
+- The 2e-5 BoolQ rerun, already noted, should be scored with the same per-letter counts. If the high learning rate buys `yes` recall and spends `no` precision, the correct count can rise while the model becomes a yes-machine. The keep bit would pass. The per-letter table would say what was bought.
