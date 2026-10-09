@@ -704,7 +704,7 @@ Do not change this run. The follow-ups that match these tables:
 
 ## What the three keeps imply while MultiNLI trains
 
-9 October 2026. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. MultiNLI is at step 9,492 of 48,822. The print at step 9,476 was learning rate 0.000184. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
+9 October 2026. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. MultiNLI is at step 10,420 of 48,822. The print at step 10,401 was learning rate 0.000181. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
 
 | chunk | saved step | steps in the chunk | last batch loss | merged |
 |---:|---:|---:|---:|---|
@@ -720,12 +720,13 @@ Do not change this run. The follow-ups that match these tables:
 | 10 | 8,123 | 685 | 0.782 | false |
 | 11 | 8,795 | 672 | 0.086 | false |
 | 12 | 9,492 | 697 | 0.621 | false |
+| 13 | 10,420 | 928 | 0.050 | false |
 
-Chunk 12 saved just after 11:03 UTC. `last_loss` 0.621 is one batch. The directory is still `/lora/v2-multinli`, still unmerged. 9,492 is 19.4% of 48,822.
+Chunk 12 saved just after 11:03 UTC. `last_loss` 0.621 is one batch. Chunk 13 saved at about 11:16 UTC and the next call loaded it: the log line is `resumed at step 10420/48822`. The first print after that resume, step 10,426, is loss 0.5349 at learning rate 0.000181. The directory is still `/lora/v2-multinli`, still unmerged. 10,420 is 21.3% of 48,822.
 
-Chunk 9 took 975 steps, the most of any chunk so far. Chunks 10 through 12 took 685, 672, and 697, the same band as chunks 3 and 4. The 926-step pace of chunk 8 did not become the pace of the epoch. Steps per eight minutes are still not a constant.
+Chunk 9 took 975 steps, the most of any chunk so far. Chunks 10 through 12 took 685, 672, and 697. Chunk 13 returned to 928 steps, the same band as chunks 1, 2, 6, and 8. The slow window is still not a property of the rows. Steps per eight minutes are still not a constant.
 
-The printed batches, one every 25 steps, average 0.506 in chunk 12. Across the twelve chunks those averages run from 0.297 (chunk 2) to 0.537 (chunk 1). Chunk 12 sits inside that range. Nineteen percent of the epoch has not produced a falling print mean. The learning rate on the print at step 9,476 is 0.000184. The cosine has left `2e-4` and is still near the top. The keep bar is unchanged: more than 7,393 correct and ECE under 0.183. The adapter has not been scored.
+The printed batches, one every 25 steps, average 0.344 in chunk 13 (37 prints, two of them above `log(3) = 1.099`, max 1.593). Across the thirteen chunks those averages still run from 0.297 (chunk 2) to 0.537 (chunk 1). Chunk 13 is near the low end of that range. It is not a new floor, and twenty-one percent of the epoch has not produced a falling print mean. The learning rate on the print at step 10,401 is 0.000181. The cosine has left `2e-4` by about a tenth of the drop toward `2e-5`. The keep bar is unchanged: more than 7,393 correct and ECE under 0.183. The adapter has not been scored. `results/phase6/multinli/train.json` does not exist yet.
 
 ### Two directions of temperature, not one
 
