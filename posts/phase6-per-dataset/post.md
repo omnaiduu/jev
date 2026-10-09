@@ -715,8 +715,9 @@ Do not change this run. The follow-ups that match these tables:
 | 5 | 3,898 | 721 | 0.328 | false |
 | 6 | 4,796 | 898 | 0.290 | false |
 | 7 | 5,537 | 741 | 0.026 | false |
+| 8 | 6,463 | 926 | 0.310 | false |
 
-Chunk 7 saved at about 10:09 UTC and the run resumed at step 5,537. `last_loss` 0.026 is one easy batch, not the chunk mean. The directory is still `/lora/v2-multinli`, still unmerged. 5,537 is 11.3% of 48,822. This chunk took 741 steps. The learning rate on the print at step 5,526 is 0.000195. The cosine is still at the top. The keep bar is unchanged.
+Chunk 8 saved at about 10:18 UTC. `last_loss` 0.310 is one batch. The directory is still `/lora/v2-multinli`, still unmerged. 6,463 is 13.2% of 48,822. This chunk took 926 steps, the same pace as the first two chunks. The slower stretch, chunks 3 through 7, did not stick. The learning rate on the print at step 6,451 is 0.000193. The cosine is still at the top. The keep bar is unchanged.
 
 Both chunks wrote `/lora/v2-multinli` only. The second loaded the first. The learning rate at step 1,837 is still `0.000199`, because `(1837 - 100) / (48822 - 100)` is about 0.036 and the cosine has barely left the top.
 
