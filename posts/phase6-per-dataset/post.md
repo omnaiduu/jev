@@ -712,8 +712,9 @@ Do not change this run. The follow-ups that match these tables:
 | 2 | 1,837 | 916 | 0.228 | false |
 | 3 | 2,509 | 672 | 0.537 | false |
 | 4 | 3,177 | 668 | 1.115 | false |
+| 5 | 3,898 | 721 | 0.328 | false |
 
-Chunk 3 saved at 09:19 UTC. Chunk 4 saved after that and the run resumed at step 3,177. `last_loss` on chunk 4 is 1.115, one batch, essentially `log(3) = 1.099`. The directory is still `/lora/v2-multinli`, still unmerged. 3,177 is 6.5% of 48,822. Wall clock from 08:48 to the step-3,177 save is about 50 minutes, including model load and the GPU queue between chunks. The first two chunks took about 920 steps in the 8-minute train window. Chunks 3 and 4 took 672 and 668. The text length of those rows is the same, about 280 characters at the mean, so the slower windows are not longer premises. The step rate is not a constant. The keep bar is unchanged. A print after the resume, step 3,501, is loss 0.060 at learning rate 0.000198. That is an easy batch. The rate has still not left the top of the cosine.
+Chunk 5 saved at about 09:46 UTC and the run resumed at step 3,898. `last_loss` 0.328 is one batch. The directory is still `/lora/v2-multinli`, still unmerged. 3,898 is 8.0% of 48,822. Wall clock from 08:48 is about 58 minutes, including model load and the GPU queue between chunks. The first two chunks took about 920 steps in the 8-minute train window. Chunks 3, 4, and 5 took 672, 668, and 721. The text length of those rows is the same, about 280 characters at the mean, so the slower windows are not longer premises. The step rate is not a constant. The keep bar is unchanged. A print after this resume, step 4,001, is loss 0.063 at learning rate 0.000197. The cosine has moved by a hair. It is still the top of the schedule.
 
 Both chunks wrote `/lora/v2-multinli` only. The second loaded the first. The learning rate at step 1,837 is still `0.000199`, because `(1837 - 100) / (48822 - 100)` is about 0.036 and the cosine has barely left the top.
 
