@@ -621,6 +621,21 @@ The learning rate on the prints through step 1,026, after the resume, is still `
 
 At this chunk size the epoch is on the order of fifty resumes. Each one reloads the base and this adapter. The keep measurement is still 7,393 / 9,815 and ECE 0.183, and it waits on step 48,822.
 
+## Step log: MultiNLI resumed and saved step 1,837
+
+9 October 2026, about 09:09 UTC. The second chunk loaded `/lora/v2-multinli` at step 921, trained with a fresh AdamW, and saved again.
+
+```
+status partial
+step 1837 / 48822
+rows 390571
+last_loss 0.228128
+adapter_dir /lora/v2-multinli
+merged false
+```
+
+The chunk covered 916 steps, 921 to 1,837. The first chunk covered 921. `last_loss` 0.228 is one batch, under the plain-test mean of 0.943 and under `log(3)`. The resume did not start over at step 0, and it did not write `/lora/adapter` or `/lora/adapter-pass2`. Two chunks are 3.8% of the epoch. The same keep bar is still ahead of step 48,822.
+
 ## Reliability bins, before any adapter
 
 Same five files, ten equal-width bins of top-letter probability, the same binning as the ECE. No row on any test put less than 0.2 on its chosen letter. BoolQ never went below 0.5.
