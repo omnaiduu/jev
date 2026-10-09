@@ -2,7 +2,7 @@
 
 8 October 2026. Model: `unsloth/gemma-4-E4B-it`, the Unsloth copy of `google/gemma-4-E4B-it`. Hardware for the scores: one Modal L40S. No adapter is loaded in the numbers below.
 
-This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ’s LoRA has finished one epoch at `/lora/v2-boolq` and has not been scored yet. The other three adapters are not started. A keep decision is not in this post. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
+This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ’s LoRA has been scored. On its own test it clears both keep conditions. The other three adapters are not started, so `results/phase6/keep.json` is not written yet. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
 
 ## What the system returns
 
@@ -336,6 +336,57 @@ The second chunk resumed at step 536 with a fresh AdamW and ran to step 929. No 
 The 37 printed batches, one every 25 steps, have mean 0.308. The first 18 average 0.423. The last 19 average 0.199. The minimum print is 0.0018 and the maximum is 1.037. The sampled batches got smaller. They did not become smooth. That drop is on the training rows, which the base model already answers at a median letter NLL near zero. A lower train loss can be the model getting sharper on rows it already had, which is the overconfidence Guo describes, or it can be the model fixing misses. The test count is the only way to tell. The before-count remains 2,824 / 3,270, ECE 0.117.
 
 The score that comes next is `modal run phase6/modal_score.py --dataset boolq --weights lora`. It reads `/lora/v2-boolq`, scores the unshuffled validation file with the flip pass, scores the 2,000 calibration rows without a flip, and fits one `T` by lowest mean letter NLL on that calibration cut. Accuracy at that `T` has to match accuracy at `T = 1`. Keep still needs a correct count above 2,824 and an ECE below 0.117 at the fitted `T`.
+
+## Step log: BoolQ LoRA scored
+
+9 October 2026, 03:08 UTC. Exit code 0. App `ap-fqUO6mxjj0l9aMsVXvuVcu`. `modal run phase6/modal_score.py --dataset boolq --weights lora`. Files: `results/phase6/boolq/lora.json`, `lora_test.jsonl`, `lora_calibration.jsonl`.
+
+The scorer loaded `/lora/v2-boolq` on top of `unsloth/gemma-4-E4B-it`. Padding side right. Prompt hash `06bf695261cfc389a19f9b5b0476e0c9cb1d6384c98869068a6a49ea1d22b79b`. Padding asserts 6,540, which is the 3,270 validation rows in the original order and again reversed. Truncated rows: 0. Test rows were not shuffled.
+
+### The keep comparison
+
+| | correct | accuracy | ECE | Brier |
+|---|---:|---:|---:|---:|
+| plain, `T = 1` | 2,824 / 3,270 | 0.864 | 0.117 | 0.248 |
+| LoRA, `T = 1` | 2,972 / 3,270 | 0.909 | 0.034 | 0.143 |
+| LoRA, `T = 1.25` | 2,972 / 3,270 | 0.909 | 0.014 | 0.140 |
+
+The correct count rose by 148. ECE at the fitted `T` fell from 0.117 to 0.014. Both keep conditions hold on this dataset. Accuracy at `T = 1.25` equals accuracy at `T = 1`, which is the temperature check. This is one row of the keep table. `results/phase6/keep.json` waits until the other three `lora.json` files exist.
+
+`T` was fit on the 2,000 calibration rows, not on the test. Calibration letter NLL is 0.242 at `T = 1` and 0.236 at `T = 1.25`. Calibration accuracy is 0.910 at both. Calibration ECE is 0.026 at `T = 1` and 0.012 at `T = 1.25`. The grid pick is a small move, 1.25 rather than 1.00. Most of the ECE drop on the test already happened at `T = 1` (0.117 to 0.034). The scalar did a further cut, 0.034 to 0.014. The weight update did the calibration. Temperature did not have to rescue an over-sure adapter.
+
+### Where the 148 came from
+
+Per letter, plain then LoRA:
+
+| letter | plain precision | plain recall | LoRA precision | LoRA recall |
+|---|---:|---:|---:|---:|
+| no | 0.780 | 0.891 | 0.872 | 0.890 |
+| yes | 0.927 | 0.847 | 0.932 | 0.920 |
+
+`no` true positives went from 1,102 to 1,101. `yes` true positives went from 1,722 to 1,871. The net +148 is the yes-recall gain minus that one `no`. The false `no` on a `yes` passage, which was 311 of the plain misses, is 162 after the update. `no` recall did not get spent. The high learning rate did not turn the model into a yes-machine on this file.
+
+Row by row against the plain predictions: 2,740 rows were right before and after, 232 misses became hits, 84 hits became misses, 214 were wrong both times. 316 rows changed letter. The adapter is not a copy of the base with a temperature taped on. It moved 316 decisions and lost 84 of the ones the base had right.
+
+### The percentages moved with the letters
+
+Plain mean letter NLL on this test was 0.772, median 0.0001, mean top-letter probability 0.981, and 83% of rows were above 0.99. The LoRA’s mean letter NLL is 0.247, median 0.016, mean top-letter probability 0.936, and 38% of rows are above 0.99. On a hit the mean probability is 0.949. On a miss it is 0.816, against 0.938 before. A model that stated 0.909 on every row would have letter NLL about 0.305. The file’s mean is 0.247, under that, so the percentages now carry information past the base rate.
+
+The top bin is 2,612 / 3,270 rows, hit rate 0.961, mean probability 0.979. That gap is 0.018, against the plain top bin’s 0.887 hit rate at probability 0.995. Below 0.9 there are 658 rows, and the 0.8–0.9 bin is no longer a coin flip: 311 rows, hit rate 0.804, probability 0.856. The 0.6–0.7 bin is still weak, 79 rows, hit rate 0.532 at probability 0.657. One `T` was enough to finish the dominant bin. It did not have to invent an ordering that was not there. The ordering in the 0.8 band showed up in the weights.
+
+Flips went from 86 / 3,270 to 78 / 3,270. The count barely moved. The margin did. The median flipped row had a probability gap of 0.60 before and 0.19 after. The sure reversals became close calls. The flip count is still not the keep bit. It is the position report, and it says the remaining order sensitivity is the near-ties.
+
+### What this does to the learning-rate worry
+
+The papers cited above say `2e-4` can add update directions that track forgetting, and that a base already at 86% may be walked off by one epoch. On this test the opposite happened: +148 correct, ECE down, `no` recall held, miss-confidence down from 0.94 to 0.82. That does not retire the worry. Banking77’s plain score is 83% on a 20-way list, which is the same shape of “the base already does the job.” The protocol for that run stays `2e-4`, rank 16, one epoch. A later BoolQ rerun at `2e-5` is still worth doing, because this file is now the high-rate point it would be compared with. It is not a reason to stop the Banking77 run or to merge anything into `/lora/v2-boolq`.
+
+### Blog lines from this step
+
+- Plain 2,824 / 3,270 to LoRA 2,972 / 3,270. The before-count was the right bar. The update cleared it.
+- The 148 is yes-recall. `no` recall stayed at 0.89. Report both letters or the correct count hides the trade.
+- ECE 0.117 to 0.034 in the weights, then to 0.014 at `T = 1.25`. Temperature was the small half.
+- 232 fixed, 84 broken. A kept adapter can still be wrong on rows the base had right.
+- The flipped rows used to be sure. After the update they are close. The flip count did not say that. The margin did.
 
 ## Reliability bins, before any adapter
 
