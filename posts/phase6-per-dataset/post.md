@@ -561,6 +561,47 @@ Flips went from 305 / 2,000 (15.3%) to 187 / 2,000 (9.4%). The median margin on 
 - 484 fixed, 131 broken. A kept typed-decisions adapter still drops rows the base had right.
 - Soft loss near the teacher entropy, and a correct count that only checks the mode, are two measurements. Both belong in the post. Only the mode count enters the keep bit.
 
+## Step log: MultiNLI training has started
+
+9 October 2026, 08:48 UTC. `modal run phase6/modal_train.py --dataset multinli`. App `ap-asL5Y0ZCQyBZTvl3EGkFTT`. Fresh LoRA from `unsloth/gemma-4-E4B-it`. Not loaded from `/lora/v2-boolq`, `/lora/v2-banking77`, or `/lora/v2-typed-decisions`. Rank 16, alpha 16, 588 trainable tensors in the text stack. Train rows 390,571. Steps 48,822, because 390,571 = 48,821 × 8 + 3. The last batch of the epoch will be 3 rows. Same schedule: warmup to `2e-4` over 100 steps, then cosine toward `2e-5`. Save directory `/lora/v2-multinli`. One GPU. The other three scores were finished before this process started.
+
+This epoch does not fit in one 8-minute chunk. Each chunk saves `/lora/v2-multinli`, returns, and the next chunk resumes that checkpoint with a fresh AdamW. The learning rate follows the global step. The first chunk is the one these prints come from.
+
+Chance for three letters is `log(3) = 1.099`. The plain test’s mean letter NLL is 0.943. Printed batch losses, one batch of eight:
+
+| completed step | batch letter NLL | learning rate |
+|---:|---:|---:|
+| 1 | 0.3037 | 0.000002 |
+| 26 | 1.4648 | 0.000052 |
+| 51 | 0.3848 | 0.000102 |
+| 76 | 0.6596 | 0.000152 |
+| 101 | 0.5507 | 0.000200 |
+| 126 | 1.1647 | 0.000200 |
+| 151 | 0.7227 | 0.000200 |
+| 176 | 0.9339 | 0.000200 |
+| 201 | 0.2844 | 0.000200 |
+| 226 | 0.9951 | 0.000200 |
+| 251 | 0.0687 | 0.000200 |
+| 276 | 0.1601 | 0.000200 |
+
+Step 101 is the first print at the protocol rate, `2e-4`. The cosine has barely moved, because 48,822 steps make the early progress a small fraction. Step 26 at 1.46 is above `log(3)`: a hard batch, on the scale of the plain-test miss NLL of 3.66 (`3.66 / 8 × 3 ≈ 1.4`). Step 251 at 0.069 is a batch the base already knows. The plain-test median letter NLL is 0.018, so batches like that exist before any useful update. Do not read a drop from 1.46 to 0.07 as the epoch.
+
+### What the score has to beat
+
+Plain matched validation: 7,393 / 9,815, ECE 0.183, Brier 0.419, flips 1,051 / 9,815. Keep needs a correct count above 7,393 and ECE below 0.183 at the fitted `T`.
+
+Per letter on that plain file:
+
+| label | precision | recall | support |
+|---|---:|---:|---:|
+| contradiction | 0.941 | 0.705 | 3,213 |
+| entailment | 0.743 | 0.885 | 3,479 |
+| neutral | 0.627 | 0.656 | 3,123 |
+
+Contradiction is the precise letter and the one with recall left to gain: 948 of its rows are called something else. Entailment is already recalled at 0.885 and is the letter with 1,064 false positives. Neutral is the weak precision, 0.627. A gain that only converts those 948 contradiction misses is a different result from a gain that spends entailment precision. The correct count will not say which. The per-letter table gets written when `lora.json` exists.
+
+SNLI, same three words, stays out of the keep bit. Its plain contradiction recall is 0.111. The MultiNLI LoRA’s SNLI score is the check on whether a contradiction gain on these sentences moves that 0.111. The before-count for that check is 6,140 / 9,842, ECE 0.349, at `T = 1` on the plain model. The temperature applied to SNLI will be the one fit on MultiNLI calibration, not a temperature fit on SNLI.
+
 ## Reliability bins, before any adapter
 
 Same five files, ten equal-width bins of top-letter probability, the same binning as the ECE. No row on any test put less than 0.2 on its chosen letter. BoolQ never went below 0.5.
