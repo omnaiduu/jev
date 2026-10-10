@@ -807,7 +807,7 @@ Chunk 41 loaded step 31,652 (`resumed at step 31652/48822`) and saved step 32,37
 
 Chunk 42 loaded step 32,378 (`resumed at step 32378/48822`) and saved step 33,316 at about 11:35 UTC, 938 steps, `last_loss` 0.014. 33,316 is 68.2% of 48,822. Its 37 prints average 0.268. None of them is above `log(3)`, and the largest is 0.823. The save itself is an easy batch. The learning rate on the print at step 33,301 is 0.000061.
 
-The local client then died again. The call that resumed at step 33,316 sat until 20:16 UTC and exited 1 with `AuthError: Jwt is expired`. The adapter on the volume stayed at step 33,316. Steps printed after that save are not in the adapter. The same command was started again from that checkpoint. The keep bar is unchanged: more than 7,393 correct and ECE under 0.183. The adapter has not been scored. `results/phase6/multinli/train.json` does not exist yet.
+The local client then died again. The call that resumed at step 33,316 sat until 20:16 UTC and exited 1 with `AuthError: Jwt is expired`. The adapter on the volume stayed at step 33,316. Steps printed after that save are not in the adapter. The same command was started again at 20:17 UTC. The log line is `resumed at step 33316/48822`. It did not start a second adapter. The keep bar is unchanged: more than 7,393 correct and ECE under 0.183. The adapter has not been scored. `results/phase6/multinli/train.json` does not exist yet.
 
 ### Two directions of temperature, not one
 
