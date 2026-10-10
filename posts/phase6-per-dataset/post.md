@@ -2,7 +2,7 @@
 
 8 October 2026. Model: `unsloth/gemma-4-E4B-it`, the Unsloth copy of `google/gemma-4-E4B-it`. Hardware for the scores: one Modal L40S. No adapter is loaded in the numbers below.
 
-This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ, Banking77, and typed-decisions have each been scored, and each clears both keep conditions on its own test. MultiNLI’s LoRA has finished one epoch at step 48,822 and has not been scored, so `results/phase6/keep.json` is not written yet. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
+This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. All four LoRAs have been scored, and each clears both keep conditions on its own test. `results/phase6/keep.json` keeps BoolQ, MultiNLI, Banking77, and typed-decisions. SNLI is the MultiNLI transfer check and does not enter the bit. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
 
 ## What the system returns
 
@@ -704,7 +704,7 @@ Do not change this run. The follow-ups that match these tables:
 
 ## What the three keeps imply while MultiNLI trains
 
-9 October 2026, updated 10 October after the epoch finished. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. The saved adapter is at step 48,822 of 48,822. The epoch is finished and the adapter has not been scored. The print at step 48,051 was learning rate 0.000020, the cosine floor, and the last chunk stayed there. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
+9 October 2026, updated 10 October after the epoch finished. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. The saved adapter is at step 48,822 of 48,822. The epoch is finished. The score is recorded after this chunk log. The print at step 48,051 was learning rate 0.000020, the cosine floor, and the last chunk stayed there. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
 
 | chunk | saved step | steps in the chunk | last batch loss | merged |
 |---:|---:|---:|---:|---|
@@ -869,7 +869,7 @@ Guo et al. describe networks that are over-sure, so the fitted `T` is above 1 an
 
 ### The high rate did not walk off the short tasks
 
-BoolQ is 929 steps and gained 148, holding `no` recall. Banking77 is 999 steps and gained 411, including `get_physical_card` from 4/40 to 40/40. Those are the tasks where the base was already at 86% and 83%, which is where the LoRA-versus-full-fine-tuning paper says a high rate adds directions that track forgetting. On these two tests it did not. MultiNLI is about fifty times as many steps at the same rate. That is the run the warning was about. If the correct count fails to clear 7,393, or if it clears and ECE rises, the first follow-up is a shorter run or `2e-5`, scored the same way. It is not a different letter readout.
+BoolQ is 929 steps and gained 148, holding `no` recall. Banking77 is 999 steps and gained 411, including `get_physical_card` from 4/40 to 40/40. Those are the tasks where the base was already at 86% and 83%, which is where the LoRA-versus-full-fine-tuning paper says a high rate adds directions that track forgetting. On these two tests it did not. MultiNLI is about fifty times as many steps at the same rate. That is the run the warning was about. The score cleared 7,393 and ECE fell, so a shorter run or `2e-5` is not a rescue for a failed keep. It remains the comparison a later experiment would make against this full epoch. It is not a different letter readout.
 
 ### How many plain hits each adapter spent
 
@@ -878,7 +878,93 @@ BoolQ is 929 steps and gained 148, holding `no` recall. Banking77 is 999 steps a
 | BoolQ | 84 | 232 | +148 |
 | Banking77 | 26 | 437 | +411 |
 | typed-decisions | 131 | 484 | +353 |
+| MultiNLI | 399 | 1,990 | +1,591 |
 
-The one-hot tasks spent few of the base’s hits. The soft-target task spent more. MultiNLI is one-hot, so the spend is the thing to count when its score exists, next to contradiction recall. Plain contradiction recall is 0.705, with 948 misses. Entailment recall is already 0.885, with 1,064 false positives. A keep that only buys contradiction by spending entailment is still a keep. The per-letter table is what says so.
+The short one-hot tasks spent few of the base’s hits. MultiNLI spent 399 and fixed 1,990. typed-decisions, the soft-target task, spent 131. The letter table, and the SNLI transfer, are in the score section.
 
-SNLI’s contradiction recall of 0.111 stays outside that bit. The prediction from the plain bins still stands: MultiNLI’s temperature will be sized for a top-bin gap of 0.176, and SNLI’s gap is 0.359, so the transfer can remain over-sure.
+## Step log: MultiNLI LoRA scored
+
+10 October 2026, 23:24 UTC. Exit code 0. App `ap-TOGVwWbnJN4bHcaIx5hEX7`. `modal run phase6/modal_score.py --dataset multinli --weights lora`. Files: `results/phase6/multinli/lora.json`, `lora_test.jsonl`, `lora_calibration.jsonl`, and `results/phase6/snli/lora.json`, `lora_test.jsonl`. `results/phase6/keep.json` is written.
+
+The scorer loaded `/lora/v2-multinli` on top of `unsloth/gemma-4-E4B-it`. Padding side right. Prompt hash `06bf695261cfc389a19f9b5b0476e0c9cb1d6384c98869068a6a49ea1d22b79b`. Padding asserts 19,630 on MultiNLI and 19,684 on SNLI, the original order and the reversed order. Truncated rows: 0. Test rows were not shuffled. The same call scored SNLI with this adapter. SNLI does not enter the keep bit.
+
+### The keep comparison
+
+| | correct | accuracy | ECE | Brier |
+|---|---:|---:|---:|---:|
+| plain, `T = 1` | 7,393 / 9,815 | 0.753 | 0.183 | 0.419 |
+| LoRA, `T = 1` | 8,984 / 9,815 | 0.915 | 0.029 | 0.133 |
+| LoRA, `T = 1.35` | 8,984 / 9,815 | 0.915 | 0.010 | 0.130 |
+
+The correct count rose by 1,591. ECE at the fitted `T` fell from 0.183 to 0.010. Both keep conditions hold on this dataset. Accuracy at `T = 1.35` equals accuracy at `T = 1`. Most of the ECE drop is in the weights (0.183 to 0.029). Temperature finishes it (0.029 to 0.010).
+
+`T` was fit on the 2,000 calibration rows. Calibration letter NLL is 0.253 at `T = 1` and 0.238 at `T = 1.35`. Calibration accuracy is 0.910 at both. Calibration ECE is 0.038 at `T = 1` and 0.015 at `T = 1.35`. The grid pick is 1.35, the same direction as BoolQ and Banking77 at 1.25, and the opposite direction from typed-decisions at 0.50. One shared temperature would still be the wrong protocol.
+
+### Where the 1,591 came from
+
+Per letter, plain then LoRA, at `T = 1`. Temperature does not change these counts.
+
+| letter | plain precision | plain recall | LoRA precision | LoRA recall |
+|---|---:|---:|---:|---:|
+| contradiction | 0.941 | 0.705 | 0.945 | 0.945 |
+| entailment | 0.743 | 0.885 | 0.930 | 0.910 |
+| neutral | 0.627 | 0.656 | 0.870 | 0.891 |
+
+Contradiction true positives went from 2,265 to 3,035. The 948 plain misses on that letter are 178. Entailment recall rose, 0.885 to 0.910, and entailment false positives fell from 1,064 to 238. Neutral precision rose from 0.627 to 0.870. The keep is not contradiction bought by spending entailment. All three recalls rose.
+
+Row by row against the plain predictions: 6,994 rows were right before and after, 1,990 misses became hits, 399 hits became misses, 432 were wrong both times. 2,459 rows changed letter. The 399 broken hits are more than BoolQ’s 84 and Banking77’s 26. The net is still +1,591. The long run spent more of the base’s hits than the short runs, and it did not walk off the base.
+
+### The percentages
+
+Plain mean letter NLL on this test was 0.943, median 0.018, mean top-letter probability 0.936. The LoRA’s mean letter NLL is 0.252, median 0.011, mean top-letter probability 0.943. On a hit the mean probability is 0.956. On a miss it is 0.798, against 0.881 before, and the miss NLL is 2.44 against 3.66. Half the rows are still above 0.99 at `T = 1`, the same share as the plain file. The letters inside that bin changed. The top bin is 8,076 / 9,815 rows, hit rate 0.967, mean probability 0.984. The plain top bin was 7,869 rows at hit rate 0.808 and probability 0.984. The gap went from 0.176 to 0.017 before temperature.
+
+At `T = 1.35` the top bin is 7,132 rows, hit rate 0.977, mean probability 0.973. The share above 0.99 falls from 0.500 to 0.275. Mean top-letter probability is 0.912 against accuracy 0.915.
+
+Flips went from 1,051 / 9,815 to 65 / 9,815. The median margin on a flipped row went from 0.60 to 0.12. Fifty-one of the 65 remaining flips have a margin under 0.2. On BoolQ the flip count barely moved and the margin collapsed. Here both moved. The flip count is still not the keep bit.
+
+### SNLI, same adapter, outside the bit
+
+| | correct | accuracy | ECE | Brier |
+|---|---:|---:|---:|---:|
+| plain, `T = 1` | 6,140 / 9,842 | 0.624 | 0.349 | 0.715 |
+| LoRA, `T = 1` | 8,909 / 9,842 | 0.905 | 0.030 | 0.146 |
+| LoRA, `T = 1.35` | 8,909 / 9,842 | 0.905 | 0.008 | 0.143 |
+
+`T = 1.35` is the MultiNLI calibration fit, applied here and not refit. Accuracy does not change. `enters_keep` is false. The count rose by 2,769. That number is not a fifth keep row.
+
+| letter | plain chosen | plain precision | plain recall | LoRA chosen | LoRA precision | LoRA recall |
+|---|---:|---:|---:|---:|---:|---:|
+| contradiction | 367 | 0.989 | 0.111 | 3,112 | 0.953 | 0.905 |
+| entailment | 3,581 | 0.853 | 0.917 | 3,341 | 0.919 | 0.922 |
+| neutral | 5,894 | 0.462 | 0.842 | 3,389 | 0.848 | 0.888 |
+
+The plain model said contradiction 367 times. This adapter says it 3,112 times, and recall goes from 0.111 to 0.905. Neutral calls fall from 5,894 to 3,389. The neutral prior was in the base weights. It is not still there.
+
+The plain-bin note predicted that a temperature sized for MultiNLI’s top-bin gap of 0.176 would leave SNLI’s gap of 0.359 over-sure. At `T = 1` the LoRA’s SNLI top bin is 7,866 / 9,842 rows, hit rate 0.961, probability 0.982, gap 0.022. ECE is 0.030. `T = 1.35` takes ECE to 0.008, and the top bin’s probability sits 0.005 under its hit rate. The scalar did not have to pull 0.99 down to 0.63. The weights had already moved the mass.
+
+Row by row: 5,802 right before and after, 3,107 fixed, 338 broken, 595 wrong both times. Flips went from 727 to 77. The median flip margin went from 0.81 to 0.12.
+
+### The four-row table
+
+`python -m phase6.report` wrote `results/phase6/keep.json`. A row is kept only when the correct count rose and ECE at the fitted `T` fell. The typed-decisions count is agreement with the stored teacher label. About 1,470 / 2,000 is how often a fresh teacher sample hits that label. It is not a cap. 1,572 is above it.
+
+| dataset | plain | LoRA | plain ECE | LoRA ECE at `T` | `T` | keep |
+|---|---:|---:|---:|---:|---:|---|
+| BoolQ | 2,824 / 3,270 | 2,972 / 3,270 | 0.117 | 0.014 | 1.25 | yes |
+| MultiNLI | 7,393 / 9,815 | 8,984 / 9,815 | 0.183 | 0.010 | 1.35 | yes |
+| Banking77 | 2,547 / 3,076 | 2,958 / 3,076 | 0.120 | 0.007 | 1.25 | yes |
+| typed-decisions | 1,219 / 2,000 | 1,572 / 2,000 | 0.303 | 0.065 | 0.50 | yes |
+
+`not_kept` is empty. The SNLI transfer is attached to the MultiNLI row with `enters_keep: false`: 6,140 / 9,842 to 8,909 / 9,842, ECE 0.349 to 0.008 at the MultiNLI `T`.
+
+### What the long run did to the learning-rate worry
+
+The warning was that 48,822 steps at `2e-4` could add directions that track forgetting, on a base that was already at 75%. The test moved the other way: +1,591 correct, ECE down, all three recalls up. The residue is the 399 plain hits the adapter broke. That is the spend a later `2e-5` run, or an early stop on calibration NLL, would be compared with. It is not a reason to merge this adapter into another dataset’s directory, and it is not a reason to change the letter readout. The printed batch losses never settled into a falling curve. The test count did. A print mean near 0.3 was not the measurement.
+
+### Blog lines from this step
+
+- Plain 7,393 / 9,815 to LoRA 8,984 / 9,815. ECE 0.183 to 0.029 in the weights, then to 0.010 at `T = 1.35`.
+- All three letters gained recall. Contradiction 0.705 to 0.945, entailment 0.885 to 0.910, neutral 0.656 to 0.891. The keep did not spend entailment to buy contradiction.
+- 1,990 fixed, 399 broken. The long epoch spent more of the base’s hits than the short ones, and the net is still the keep.
+- SNLI, same three words, same adapter, not in the bit: 6,140 / 9,842 to 8,909 / 9,842. Contradiction recall 0.111 to 0.905. The neutral prior left with the weights. MultiNLI’s `T` did not have to rescue an over-sure transfer.
+- Four keeps. Two temperatures above 1, one at the bottom of the grid. Do not share one `T`, and do not merge the adapters.
