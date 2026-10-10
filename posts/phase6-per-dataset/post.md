@@ -2,7 +2,7 @@
 
 8 October 2026. Model: `unsloth/gemma-4-E4B-it`, the Unsloth copy of `google/gemma-4-E4B-it`. Hardware for the scores: one Modal L40S. No adapter is loaded in the numbers below.
 
-This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ, Banking77, and typed-decisions have each been scored, and each clears both keep conditions on its own test. MultiNLI’s LoRA is training from the frozen base and has not been scored, so `results/phase6/keep.json` is not written yet. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
+This post records the Phase 6 measurement that replaces the mixed-pile exam. It covers the protocol, the exact prompt and readout, the four splits, and the plain-model scores. All four plain tests are in. SNLI’s plain transfer score is in. BoolQ, Banking77, and typed-decisions have each been scored, and each clears both keep conditions on its own test. MultiNLI’s LoRA has finished one epoch at step 48,822 and has not been scored, so `results/phase6/keep.json` is not written yet. Each finished step is logged below with what was done, what the numbers were, and what is worth keeping for a later post.
 
 ## What the system returns
 
@@ -704,7 +704,7 @@ Do not change this run. The follow-ups that match these tables:
 
 ## What the three keeps imply while MultiNLI trains
 
-9 October 2026, updated 10 October after the local client died. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. The saved adapter is at step 48,065 of 48,822. The print at step 48,051 was learning rate 0.000020. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
+9 October 2026, updated 10 October after the epoch finished. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. The saved adapter is at step 48,822 of 48,822. The epoch is finished and the adapter has not been scored. The print at step 48,051 was learning rate 0.000020, the cosine floor, and the last chunk stayed there. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
 
 | chunk | saved step | steps in the chunk | last batch loss | merged |
 |---:|---:|---:|---:|---|
@@ -767,6 +767,7 @@ Do not change this run. The follow-ups that match these tables:
 | 57 | 46,207 | 921 | 0.048 | false |
 | 58 | 47,130 | 923 | 0.569 | false |
 | 59 | 48,065 | 935 | 0.318 | false |
+| 60 | 48,822 | 757 | 0.068 | false |
 
 Chunk 12 saved just after 11:03 UTC on 9 October. Chunk 13 saved at about 11:16 UTC. Chunk 19 saved at 12:24 UTC the same day. Each of those calls loaded `/lora/v2-multinli` and the log line after chunk 19 is `resumed at step 15324/48822`. The directory is still that one, still unmerged. 15,324 is 31.4% of 48,822.
 
@@ -859,6 +860,8 @@ Chunk 57 loaded step 45,286 (`resumed at step 45286/48822`) and saved step 46,20
 Chunk 58 loaded step 46,207 (`resumed at step 46207/48822`) and saved step 47,130 at about 22:51 UTC, 923 steps, `last_loss` 0.569. Its 37 prints average 0.239. None of them is above `log(3)`, and the largest is 1.045. That is the third chunk in a row under `log(3)`. The means of chunks 56 through 58 are 0.209, 0.229, and 0.239, so the quiet samples did not become a lower curve. The last batch, 0.569, is above the print mean.
 
 Chunk 59 loaded step 47,130 (`resumed at step 47130/48822`) and saved step 48,065 at about 23:00 UTC, 935 steps, `last_loss` 0.318. 48,065 is 98.4% of 48,822. Its 37 prints average 0.277. None of them is above `log(3)`, and the largest is 1.050. That is the fourth chunk in a row under `log(3)`. The means of chunks 56 through 59 are 0.209, 0.229, 0.239, and 0.277. The learning rate on the print at step 48,051 is 0.000020, the cosine floor. 757 steps remain. The same local process is still the one calling `train.remote`. The keep bar is unchanged: more than 7,393 correct and ECE under 0.183. The adapter has not been scored. `results/phase6/multinli/train.json` does not exist yet.
+
+Chunk 60 loaded step 48,065 (`resumed at step 48065/48822`) and saved step 48,822 at about 23:07 UTC, 757 steps. The epoch ended in this chunk, so the window is the remaining steps, not an eight-minute cutoff. The final printed batch is that save: step 48,822, loss 0.0679, learning rate 0.000020, on the 3-row last batch. The done payload does not store `last_loss`; the print is the last batch. Its 31 prints average 0.332. Two of them are above `log(3)`, and the largest is 1.628. The four-chunk run under `log(3)` stopped. The mean rose from chunk 59’s 0.277. The last 100 batches of this chunk average 0.270, which sits with the recent print means and not with the easy last batch. `epoch_loss_fell` is true: that 0.270 is under the mean of the first four sampled losses, 0.703. The local client exited 0. App `ap-GEqf3SOjYAgoCD3gQWuXG4`. `results/phase6/multinli/train.json` now exists, status done, 390,571 rows, 48,822 steps, resumed from 48,065, 588 trainable tensors, adapter `/lora/v2-multinli`, merged false, `truncated_rows` 0. The adapter has not been scored. The keep bar is unchanged: more than 7,393 correct and ECE under 0.183.
 
 ### Two directions of temperature, not one
 
