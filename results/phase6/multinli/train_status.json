@@ -1,10 +1,10 @@
 {
   "status": "partial",
   "dataset": "multinli",
-  "step": 42683,
+  "step": 43620,
   "steps": 48822,
   "rows": 390571,
-  "last_loss": 0.04511,
+  "last_loss": 0.856015,
   "adapter_dir": "/lora/v2-multinli",
   "merged": false
 }
