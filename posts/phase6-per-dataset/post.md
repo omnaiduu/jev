@@ -704,7 +704,7 @@ Do not change this run. The follow-ups that match these tables:
 
 ## What the three keeps imply while MultiNLI trains
 
-9 October 2026. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. MultiNLI is at step 10,420 of 48,822. The print at step 10,401 was learning rate 0.000181. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
+9 October 2026, updated 10 October after the local client died. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. The saved adapter is at step 15,324 of 48,822. The print at step 15,301 was learning rate 0.000160. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
 
 | chunk | saved step | steps in the chunk | last batch loss | merged |
 |---:|---:|---:|---:|---|
@@ -721,12 +721,22 @@ Do not change this run. The follow-ups that match these tables:
 | 11 | 8,795 | 672 | 0.086 | false |
 | 12 | 9,492 | 697 | 0.621 | false |
 | 13 | 10,420 | 928 | 0.050 | false |
+| 14 | 11,364 | 944 | 0.836 | false |
+| 15 | 12,103 | 739 | 1.528 | false |
+| 16 | 13,021 | 918 | 1.122 | false |
+| 17 | 13,726 | 705 | 0.666 | false |
+| 18 | 14,398 | 672 | 0.115 | false |
+| 19 | 15,324 | 926 | 0.230 | false |
 
-Chunk 12 saved just after 11:03 UTC. `last_loss` 0.621 is one batch. Chunk 13 saved at about 11:16 UTC and the next call loaded it: the log line is `resumed at step 10420/48822`. The first print after that resume, step 10,426, is loss 0.5349 at learning rate 0.000181. The directory is still `/lora/v2-multinli`, still unmerged. 10,420 is 21.3% of 48,822.
+Chunk 12 saved just after 11:03 UTC on 9 October. Chunk 13 saved at about 11:16 UTC. Chunk 19 saved at 12:24 UTC the same day. Each of those calls loaded `/lora/v2-multinli` and the log line after chunk 19 is `resumed at step 15324/48822`. The directory is still that one, still unmerged. 15,324 is 31.4% of 48,822.
 
-Chunk 9 took 975 steps, the most of any chunk so far. Chunks 10 through 12 took 685, 672, and 697. Chunk 13 returned to 928 steps, the same band as chunks 1, 2, 6, and 8. The slow window is still not a property of the rows. Steps per eight minutes are still not a constant.
+Chunk 9 took 975 steps, still the most. Chunks 14 and 19 took 944 and 926. Chunks 15, 17, and 18 took 739, 705, and 672. The slow window is still not a property of the rows.
 
-The printed batches, one every 25 steps, average 0.344 in chunk 13 (37 prints, two of them above `log(3) = 1.099`, max 1.593). Across the thirteen chunks those averages still run from 0.297 (chunk 2) to 0.537 (chunk 1). Chunk 13 is near the low end of that range. It is not a new floor, and twenty-one percent of the epoch has not produced a falling print mean. The learning rate on the print at step 10,401 is 0.000181. The cosine has left `2e-4` by about a tenth of the drop toward `2e-5`. The keep bar is unchanged: more than 7,393 correct and ECE under 0.183. The adapter has not been scored. `results/phase6/multinli/train.json` does not exist yet.
+The printed batches, one every 25 steps, average 0.277 in chunk 15, the lowest chunk mean so far (30 prints, two of them above `log(3) = 1.099`). The last batch of that same chunk is 1.528, which is above `log(3)`. Chunk 14’s prints average 0.298 and none of them cross `log(3)`, while its last batch is 0.836. Chunks 16 through 19 average 0.312, 0.353, 0.306, and 0.319. The thirteen earlier chunk means ran from 0.297 to 0.537. One chunk dipped under that floor and the next four moved back into the same band. Thirty-one percent of the epoch has not produced a falling curve. The learning rate on the print at step 15,301 is 0.000160, about a fifth of the way from `2e-4` down to `2e-5`.
+
+The local client then died. On 10 October the process that had been up since 08:48 UTC on 9 October exited 1 with `AuthError: Jwt is expired` while waiting on the call that had resumed at step 15,324. Prints in that unsaved slice reached step 15,401, loss 0.0414, learning rate 0.000160. `train_status.json` stayed at step 15,324, `last_loss` 0.230126. Those steps after the checkpoint are not in the adapter.
+
+The same command was started again at 07:58 UTC on 10 October. App `ap-eNoZq7XdhR1kkSWf8xrNNv`. The log line is `resumed at step 15324/48822`. It did not start a second adapter and it did not load the BoolQ, Banking77, or typed-decisions weights. The keep bar is unchanged: more than 7,393 correct and ECE under 0.183. The adapter has not been scored. `results/phase6/multinli/train.json` does not exist yet.
 
 ### Two directions of temperature, not one
 
