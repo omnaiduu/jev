@@ -704,7 +704,7 @@ Do not change this run. The follow-ups that match these tables:
 
 ## What the three keeps imply while MultiNLI trains
 
-9 October 2026, updated 10 October after the local client died. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. The saved adapter is at step 26,032 of 48,822. The print at step 26,026 was learning rate 0.000101. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
+9 October 2026, updated 10 October after the local client died. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. The saved adapter is at step 26,773 of 48,822. The print at step 26,751 was learning rate 0.000097. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
 
 | chunk | saved step | steps in the chunk | last batch loss | merged |
 |---:|---:|---:|---:|---|
@@ -741,6 +741,7 @@ Do not change this run. The follow-ups that match these tables:
 | 31 | 24,397 | 912 | 0.798 | false |
 | 32 | 25,294 | 897 | 0.031 | false |
 | 33 | 26,032 | 738 | 1.536 | false |
+| 34 | 26,773 | 741 | 1.059 | false |
 
 Chunk 12 saved just after 11:03 UTC on 9 October. Chunk 13 saved at about 11:16 UTC. Chunk 19 saved at 12:24 UTC the same day. Each of those calls loaded `/lora/v2-multinli` and the log line after chunk 19 is `resumed at step 15324/48822`. The directory is still that one, still unmerged. 15,324 is 31.4% of 48,822.
 
@@ -778,7 +779,9 @@ Chunk 31 loaded step 23,485 (`resumed at step 23485/48822`) and saved step 24,39
 
 Chunk 32 loaded step 24,397 (`resumed at step 24397/48822`) and saved step 25,294 at about 10:00 UTC, 897 steps, `last_loss` 0.031. Its 36 prints average 0.380. Two of them are above `log(3)`, and the largest is 1.499. The last printed batch, step 25,276, is 1.098, which sits on `log(3)`. The save itself is an easy batch at 0.031. The means of chunks 28 through 32 are 0.199, 0.253, 0.298, 0.309, and 0.380.
 
-Chunk 33 loaded step 25,294 (`resumed at step 25294/48822`) and saved step 26,032 at about 10:09 UTC, 738 steps, `last_loss` 1.536. 26,032 is 53.3% of 48,822. Its 30 prints average 0.222. None of them is above `log(3)`, and the largest is 0.695. That is the second chunk in the run, after chunk 28, with every sampled batch under a uniform three-way guess. The mean sits next to chunk 20’s 0.220 and above chunk 28’s 0.199. The save itself is a hard batch at 1.536, above `log(3)`, so the checkpoint loss and the print mean point opposite ways. The climb through chunks 28–32 stopped. The learning rate on the print at step 26,026 is 0.000101. The same local process is still the one calling `train.remote`. The keep bar is unchanged: more than 7,393 correct and ECE under 0.183. The adapter has not been scored. `results/phase6/multinli/train.json` does not exist yet.
+Chunk 33 loaded step 25,294 (`resumed at step 25294/48822`) and saved step 26,032 at about 10:09 UTC, 738 steps, `last_loss` 1.536. Its 30 prints average 0.222. None of them is above `log(3)`, and the largest is 0.695. That is the second chunk in the run, after chunk 28, with every sampled batch under a uniform three-way guess. The mean sits next to chunk 20’s 0.220 and above chunk 28’s 0.199. The save itself is a hard batch at 1.536, above `log(3)`, so the checkpoint loss and the print mean point opposite ways. The climb through chunks 28–32 stopped.
+
+Chunk 34 loaded step 26,032 (`resumed at step 26032/48822`) and saved step 26,773 at about 10:18 UTC, 741 steps, `last_loss` 1.059. 26,773 is 54.8% of 48,822. Its 29 prints average 0.335. One of them is above `log(3)`, and the largest is 1.468. The under-`log(3)` window in chunk 33 did not hold. The last batch, 1.059, sits just under `log(3)` and is not the print mean. The learning rate on the print at step 26,751 is 0.000097. The same local process is still the one calling `train.remote`. The keep bar is unchanged: more than 7,393 correct and ECE under 0.183. The adapter has not been scored. `results/phase6/multinli/train.json` does not exist yet.
 
 ### Two directions of temperature, not one
 
