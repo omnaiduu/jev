@@ -1,0 +1,29 @@
+{
+  "dataset": "snli",
+  "role": "transfer check for the multinli LoRA",
+  "enters_keep": false,
+  "padding_side": "right",
+  "prompt_sha256": "06bf695261cfc389a19f9b5b0476e0c9cb1d6384c98869068a6a49ea1d22b79b",
+  "prompt_template": "A. {option text}",
+  "label_source": "human entailment, neutral, or contradiction; transfer check only",
+  "target_kind": "one_hot",
+  "downloaded": {
+    "validation_examples": 10000,
+    "dropped": 158,
+    "source": "stanfordnlp/snli",
+    "split": "validation"
+  },
+  "test_rows": 9842,
+  "test_shuffled_rows": 0,
+  "types_test": {
+    "choice": 9842
+  },
+  "files": {
+    "test": {
+      "path": "data/phase6/snli/test.jsonl",
+      "rows": 9842,
+      "sha256": "82ef1cf4b7469524d427f4147cd0df49bb5c07999cabca89c4532187b7e008cf",
+      "bytes": 5985675
+    }
+  }
+}
