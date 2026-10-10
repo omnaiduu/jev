@@ -704,7 +704,7 @@ Do not change this run. The follow-ups that match these tables:
 
 ## What the three keeps imply while MultiNLI trains
 
-9 October 2026, updated 10 October after the local client died. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. The saved adapter is at step 47,130 of 48,822. The print at step 47,126 was learning rate 0.000021. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
+9 October 2026, updated 10 October after the local client died. This is not a change to the MultiNLI run. BoolQ, Banking77, and typed-decisions have keep rows. The saved adapter is at step 48,065 of 48,822. The print at step 48,051 was learning rate 0.000020. The chunk log from here is a table. A row is added when a chunk saves. The prose above already covers the first two.
 
 | chunk | saved step | steps in the chunk | last batch loss | merged |
 |---:|---:|---:|---:|---|
@@ -766,6 +766,7 @@ Do not change this run. The follow-ups that match these tables:
 | 56 | 45,286 | 710 | 0.035 | false |
 | 57 | 46,207 | 921 | 0.048 | false |
 | 58 | 47,130 | 923 | 0.569 | false |
+| 59 | 48,065 | 935 | 0.318 | false |
 
 Chunk 12 saved just after 11:03 UTC on 9 October. Chunk 13 saved at about 11:16 UTC. Chunk 19 saved at 12:24 UTC the same day. Each of those calls loaded `/lora/v2-multinli` and the log line after chunk 19 is `resumed at step 15324/48822`. The directory is still that one, still unmerged. 15,324 is 31.4% of 48,822.
 
@@ -855,7 +856,9 @@ Chunk 56 loaded step 44,576 (`resumed at step 44576/48822`) and saved step 45,28
 
 Chunk 57 loaded step 45,286 (`resumed at step 45286/48822`) and saved step 46,207 at about 22:41 UTC, 921 steps, `last_loss` 0.048. Its 37 prints average 0.229. None of them is above `log(3)`, and the largest is 0.963. That is the second chunk in a row with every sampled batch under a uniform three-way guess. The mean rose from chunk 56’s 0.209. The save itself is an easy batch. The learning rate on the print at step 46,201 is 0.000021, next to the cosine floor of 0.000020.
 
-Chunk 58 loaded step 46,207 (`resumed at step 46207/48822`) and saved step 47,130 at about 22:51 UTC, 923 steps, `last_loss` 0.569. 47,130 is 96.5% of 48,822. Its 37 prints average 0.239. None of them is above `log(3)`, and the largest is 1.045. That is the third chunk in a row under `log(3)`. The means of chunks 56 through 58 are 0.209, 0.229, and 0.239, so the quiet samples did not become a lower curve. The last batch, 0.569, is above the print mean. The learning rate on the print at step 47,126 is 0.000021. The same local process is still the one calling `train.remote`. About 1,700 steps remain. The keep bar is unchanged: more than 7,393 correct and ECE under 0.183. The adapter has not been scored. `results/phase6/multinli/train.json` does not exist yet.
+Chunk 58 loaded step 46,207 (`resumed at step 46207/48822`) and saved step 47,130 at about 22:51 UTC, 923 steps, `last_loss` 0.569. Its 37 prints average 0.239. None of them is above `log(3)`, and the largest is 1.045. That is the third chunk in a row under `log(3)`. The means of chunks 56 through 58 are 0.209, 0.229, and 0.239, so the quiet samples did not become a lower curve. The last batch, 0.569, is above the print mean.
+
+Chunk 59 loaded step 47,130 (`resumed at step 47130/48822`) and saved step 48,065 at about 23:00 UTC, 935 steps, `last_loss` 0.318. 48,065 is 98.4% of 48,822. Its 37 prints average 0.277. None of them is above `log(3)`, and the largest is 1.050. That is the fourth chunk in a row under `log(3)`. The means of chunks 56 through 59 are 0.209, 0.229, 0.239, and 0.277. The learning rate on the print at step 48,051 is 0.000020, the cosine floor. 757 steps remain. The same local process is still the one calling `train.remote`. The keep bar is unchanged: more than 7,393 correct and ECE under 0.183. The adapter has not been scored. `results/phase6/multinli/train.json` does not exist yet.
 
 ### Two directions of temperature, not one
 
