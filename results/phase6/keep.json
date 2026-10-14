@@ -1,0 +1,88 @@
+{
+  "rule": "keep when the correct count rose and ECE at the fitted T fell, on this dataset's test",
+  "rows": [
+    {
+      "dataset": "boolq",
+      "n": 3270,
+      "plain_correct": 2824,
+      "lora_correct": 2972,
+      "plain_ece": 0.1174571941481354,
+      "lora_ece_at_1": 0.03365336708469263,
+      "lora_ece_at_T": 0.013565511653854093,
+      "T": 1.25,
+      "missing_types": [],
+      "accuracy_up": true,
+      "ece_down": true,
+      "keep": true,
+      "flip_plain_changed": 86,
+      "flip_lora_changed": 78
+    },
+    {
+      "dataset": "multinli",
+      "n": 9815,
+      "plain_correct": 7393,
+      "lora_correct": 8984,
+      "plain_ece": 0.18257153223121614,
+      "lora_ece_at_1": 0.02850702257876516,
+      "lora_ece_at_T": 0.009600624470057889,
+      "T": 1.35,
+      "missing_types": [],
+      "accuracy_up": true,
+      "ece_down": true,
+      "keep": true,
+      "flip_plain_changed": 1051,
+      "flip_lora_changed": 65,
+      "snli_transfer": {
+        "enters_keep": false,
+        "n": 9842,
+        "plain_correct": 6140,
+        "lora_correct": 8909,
+        "plain_ece": 0.3485818105241198,
+        "lora_ece_at_T": 0.007937342332411232,
+        "T": 1.35
+      }
+    },
+    {
+      "dataset": "banking77",
+      "n": 3076,
+      "plain_correct": 2547,
+      "lora_correct": 2958,
+      "plain_ece": 0.119512375317047,
+      "lora_ece_at_1": 0.018826951129397602,
+      "lora_ece_at_T": 0.007187612119965088,
+      "T": 1.25,
+      "missing_types": [],
+      "accuracy_up": true,
+      "ece_down": true,
+      "keep": true,
+      "flip_plain_changed": 400,
+      "flip_lora_changed": 40
+    },
+    {
+      "dataset": "typed-decisions",
+      "n": 2000,
+      "plain_correct": 1219,
+      "lora_correct": 1572,
+      "plain_ece": 0.30304514319146586,
+      "lora_ece_at_1": 0.17484838371862552,
+      "lora_ece_at_T": 0.06530842476685687,
+      "T": 0.5,
+      "missing_types": [],
+      "accuracy_up": true,
+      "ece_down": true,
+      "keep": true,
+      "flip_plain_changed": 305,
+      "flip_lora_changed": 187,
+      "teacher_ceiling_correct": 1470,
+      "teacher_ceiling_n": 2000,
+      "correct_means": "agreement with the stored teacher label"
+    }
+  ],
+  "kept": [
+    "boolq",
+    "multinli",
+    "banking77",
+    "typed-decisions"
+  ],
+  "not_kept": []
+}

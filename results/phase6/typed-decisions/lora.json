@@ -1,0 +1,95 @@
+{
+  "dataset": "typed-decisions",
+  "model": "unsloth/gemma-4-E4B-it",
+  "lora": true,
+  "adapter_dir": "/lora/v2-typed-decisions",
+  "padding_side": "right",
+  "padding_asserts": 4000,
+  "truncated": 0,
+  "prompt_sha256": "06bf695261cfc389a19f9b5b0476e0c9cb1d6384c98869068a6a49ea1d22b79b",
+  "index": "last_content",
+  "test_at_1": {
+    "n": 2000,
+    "correct": 1572,
+    "accuracy": 0.786,
+    "ece": 0.17484838371862552,
+    "brier": 0.3426549674477422,
+    "by_type": {
+      "choice": {
+        "n": 600,
+        "correct": 445,
+        "accuracy": 0.7416666666666667,
+        "ece": 0.1620967402107414,
+        "brier": 0.3850148816409429
+      },
+      "noul": {
+        "n": 600,
+        "correct": 516,
+        "accuracy": 0.86,
+        "ece": 0.1245333436427907,
+        "brier": 0.22437755277105875
+      },
+      "score": {
+        "n": 800,
+        "correct": 611,
+        "accuracy": 0.76375,
+        "ece": 0.22214839640641462,
+        "brier": 0.399593092810358
+      }
+    }
+  },
+  "flip": {
+    "n": 2000,
+    "changed": 187,
+    "unchanged": 1813,
+    "change_rate": 0.0935
+  },
+  "temperature": {
+    "T": 0.5,
+    "fit": true,
+    "fit_on": "calibration",
+    "nll": 0.4528460313641782,
+    "nll_at_1": 0.5955606384632491,
+    "calibration_n": 2000,
+    "calibration_types": [
+      "choice",
+      "noul",
+      "score"
+    ],
+    "missing_types": [],
+    "calibration_accuracy_at_1": 0.8235,
+    "calibration_accuracy_at_T": 0.8235,
+    "calibration_ece_at_1": 0.2129816979025722,
+    "calibration_ece_at_T": 0.0810030546854735
+  },
+  "test_at_T": {
+    "n": 2000,
+    "correct": 1572,
+    "accuracy": 0.786,
+    "ece": 0.06530842476685687,
+    "brier": 0.28309602042359616,
+    "by_type": {
+      "choice": {
+        "n": 600,
+        "correct": 445,
+        "accuracy": 0.7416666666666667,
+        "ece": 0.07456441036785205,
+        "brier": 0.33507613346696036
+      },
+      "noul": {
+        "n": 600,
+        "correct": 516,
+        "accuracy": 0.86,
+        "ece": 0.07393208991358435,
+        "brier": 0.18078758282626362
+      },
+      "score": {
+        "n": 800,
+        "correct": 611,
+        "accuracy": 0.76375,
+        "ece": 0.07379457914249549,
+        "brier": 0.32084226383907455
+      }
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "dataset": "typed-decisions",
+  "seed": 0,
+  "padding_side": "right",
+  "prompt_sha256": "06bf695261cfc389a19f9b5b0476e0c9cb1d6384c98869068a6a49ea1d22b79b",
+  "prompt_template": "A. {option text}",
+  "system_prompt": "You are a judge. The next token must be one of the option letters. Do not explain.",
+  "label_source": "teacher letter, three samples at temperature 0.7; the loss target is the stored probability vector; the correct count is agreement with the stored label",
+  "target_kind": "soft",
+  "calibration_n_target": 2000,
+  "downloaded": {
+    "train_cases": 1200,
+    "test_cases": 400,
+    "train_questions": 6000,
+    "test_questions": 2000,
+    "source": "LocalLLaMA/typed-decisions:all",
+    "config": "all",
+    "train_split": "train",
+    "test_split": "test",
+    "dropped_test_overlap": 0,
+    "dropped_duplicate_rows": 0,
+    "dropped_label_conflicts": 0
+  },
+  "train_rows": 4000,
+  "calibration_rows": 2000,
+  "test_rows": 2000,
+  "train_shuffled_rows": 1200,
+  "train_shuffle_fraction": 0.3,
+  "calibration_shuffled_rows": 0,
+  "test_shuffled_rows": 0,
+  "train_row_order": "shuffled",
+  "calibration_row_order": "source_order",
+  "test_row_order": "source_order",
+  "types_train": {
+    "choice": 1198,
+    "noul": 1202,
+    "score": 1600
+  },
+  "types_calibration": {
+    "choice": 602,
+    "noul": 598,
+    "score": 800
+  },
+  "types_test": {
+    "choice": 600,
+    "noul": 600,
+    "score": 800
+  },
+  "missing_calibration_types": [],
+  "duplicate_keys_train": 0,
+  "duplicate_keys_test": 0,
+  "test_ids_in_train": 0,
+  "test_ids_in_calibration": 0,
+  "files": {
+    "train": {
+      "path": "data/phase6/typed-decisions/train.jsonl",
+      "rows": 4000,
+      "sha256": "65765a9bb72d2f000f3adcdd1a9a6e2e12ad8fb10b101a999fc8a4d3f4af5e09",
+      "bytes": 6014949
+    },
+    "calibration": {
+      "path": "data/phase6/typed-decisions/calibration.jsonl",
+      "rows": 2000,
+      "sha256": "047d2305e430034f2a1e5f05cd96d0b88a0cda7be43221a457b08a039512ae8d",
+      "bytes": 2998613
+    },
+    "test": {
+      "path": "data/phase6/typed-decisions/test.jsonl",
+      "rows": 2000,
+      "sha256": "1c0e08c63523517f62da180de3ebebb43c796b29fe37ffee4c02b66fc600e26b",
+      "bytes": 2989291
+    }
+  },
+  "one_hot_letter": false,
+  "loss_target": "soft teacher probabilities",
+  "accuracy_label": "stored teacher label",
+  "stored_label_not_mode": 0,
+  "probability_ties": 96,
+  "renormalized_rows": 1682,
+  "calibration_unit": "case",
+  "teacher_ceiling_correct": 1470,
+  "teacher_ceiling_n": 2000
+}

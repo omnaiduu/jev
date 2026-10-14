@@ -1,0 +1,55 @@
+{
+  "dataset": "boolq",
+  "model": "unsloth/gemma-4-E4B-it",
+  "lora": false,
+  "adapter_dir": null,
+  "padding_side": "right",
+  "padding_asserts": 6540,
+  "truncated": 0,
+  "prompt_sha256": "06bf695261cfc389a19f9b5b0476e0c9cb1d6384c98869068a6a49ea1d22b79b",
+  "index": "last_content",
+  "test_at_1": {
+    "n": 3270,
+    "correct": 2824,
+    "accuracy": 0.8636085626911315,
+    "ece": 0.1174571941481354,
+    "brier": 0.2478432509177426,
+    "by_type": {
+      "noul": {
+        "n": 3270,
+        "correct": 2824,
+        "accuracy": 0.8636085626911315,
+        "ece": 0.1174571941481354,
+        "brier": 0.2478432509177426
+      }
+    }
+  },
+  "flip": {
+    "n": 3270,
+    "changed": 86,
+    "unchanged": 3184,
+    "change_rate": 0.026299694189602447
+  },
+  "temperature": {
+    "T": 1.0,
+    "fit": false,
+    "missing_types": [],
+    "calibration_types": []
+  },
+  "test_at_T": {
+    "n": 3270,
+    "correct": 2824,
+    "accuracy": 0.8636085626911315,
+    "ece": 0.1174571941481354,
+    "brier": 0.2478432509177426,
+    "by_type": {
+      "noul": {
+        "n": 3270,
+        "correct": 2824,
+        "accuracy": 0.8636085626911315,
+        "ece": 0.1174571941481354,
+        "brier": 0.2478432509177426
+      }
+    }
+  }
+}

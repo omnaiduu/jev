@@ -1,0 +1,65 @@
+{
+  "dataset": "boolq",
+  "model": "unsloth/gemma-4-E4B-it",
+  "lora": true,
+  "adapter_dir": "/lora/v2-boolq",
+  "padding_side": "right",
+  "padding_asserts": 6540,
+  "truncated": 0,
+  "prompt_sha256": "06bf695261cfc389a19f9b5b0476e0c9cb1d6384c98869068a6a49ea1d22b79b",
+  "index": "last_content",
+  "test_at_1": {
+    "n": 3270,
+    "correct": 2972,
+    "accuracy": 0.908868501529052,
+    "ece": 0.03365336708469263,
+    "brier": 0.14282895840313334,
+    "by_type": {
+      "noul": {
+        "n": 3270,
+        "correct": 2972,
+        "accuracy": 0.908868501529052,
+        "ece": 0.03365336708469263,
+        "brier": 0.14282895840313334
+      }
+    }
+  },
+  "flip": {
+    "n": 3270,
+    "changed": 78,
+    "unchanged": 3192,
+    "change_rate": 0.023853211009174313
+  },
+  "temperature": {
+    "T": 1.25,
+    "fit": true,
+    "fit_on": "calibration",
+    "nll": 0.23565059875927497,
+    "nll_at_1": 0.2420053637664193,
+    "calibration_n": 2000,
+    "calibration_types": [
+      "noul"
+    ],
+    "missing_types": [],
+    "calibration_accuracy_at_1": 0.91,
+    "calibration_accuracy_at_T": 0.91,
+    "calibration_ece_at_1": 0.02646504832882509,
+    "calibration_ece_at_T": 0.01179603374656446
+  },
+  "test_at_T": {
+    "n": 3270,
+    "correct": 2972,
+    "accuracy": 0.908868501529052,
+    "ece": 0.013565511653854093,
+    "brier": 0.13999877363689592,
+    "by_type": {
+      "noul": {
+        "n": 3270,
+        "correct": 2972,
+        "accuracy": 0.908868501529052,
+        "ece": 0.013565511653854093,
+        "brier": 0.13999877363689592
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "dataset": "multinli",
+  "seed": 0,
+  "padding_side": "right",
+  "prompt_sha256": "06bf695261cfc389a19f9b5b0476e0c9cb1d6384c98869068a6a49ea1d22b79b",
+  "prompt_template": "A. {option text}",
+  "system_prompt": "You are a judge. The next token must be one of the option letters. Do not explain.",
+  "label_source": "human entailment, neutral, or contradiction",
+  "target_kind": "one_hot",
+  "calibration_n_target": 2000,
+  "downloaded": {
+    "train_examples": 392702,
+    "test_examples": 9815,
+    "test_split": "validation_matched",
+    "label_names": [
+      "entailment",
+      "neutral",
+      "contradiction"
+    ],
+    "source": "nyu-mll/multi_nli",
+    "dropped_train": 0,
+    "dropped_test": 0,
+    "dropped_test_overlap": 0,
+    "dropped_duplicate_rows": 131,
+    "dropped_label_conflicts": 103
+  },
+  "train_rows": 390571,
+  "calibration_rows": 2000,
+  "test_rows": 9815,
+  "train_shuffled_rows": 117171,
+  "train_shuffle_fraction": 0.3,
+  "calibration_shuffled_rows": 0,
+  "test_shuffled_rows": 0,
+  "train_row_order": "shuffled",
+  "calibration_row_order": "source_order",
+  "test_row_order": "source_order",
+  "types_train": {
+    "choice": 390571
+  },
+  "types_calibration": {
+    "choice": 2000
+  },
+  "types_test": {
+    "choice": 9815
+  },
+  "missing_calibration_types": [],
+  "duplicate_keys_train": 0,
+  "duplicate_keys_test": 0,
+  "test_ids_in_train": 0,
+  "test_ids_in_calibration": 0,
+  "files": {
+    "train": {
+      "path": "data/phase6/multinli/train.jsonl",
+      "rows": 390571,
+      "sha256": "40c1acd3c0e75200ee3d37695b4018d71a905b6c3f21cd3f6ae76e4905c0844e",
+      "bytes": 261524070
+    },
+    "calibration": {
+      "path": "data/phase6/multinli/calibration.jsonl",
+      "rows": 2000,
+      "sha256": "98639966777b768f49aa7e351048b6bf949a2dd092c8f8ca14b54a540af7e22e",
+      "bytes": 1334367
+    },
+    "test": {
+      "path": "data/phase6/multinli/test.jsonl",
+      "rows": 9815,
+      "sha256": "20a22b34f09e9d0b5dc87f48cebebb7c73ce0a8983bf39ccd3748c8a8917bb27",
+      "bytes": 6798992
+    }
+  },
+  "one_hot_letter": true
+}

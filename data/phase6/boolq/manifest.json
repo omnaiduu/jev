@@ -1,0 +1,66 @@
+{
+  "dataset": "boolq",
+  "seed": 0,
+  "padding_side": "right",
+  "prompt_sha256": "06bf695261cfc389a19f9b5b0476e0c9cb1d6384c98869068a6a49ea1d22b79b",
+  "prompt_template": "A. {option text}",
+  "system_prompt": "You are a judge. The next token must be one of the option letters. Do not explain.",
+  "label_source": "human yes/no",
+  "target_kind": "one_hot",
+  "calibration_n_target": 2000,
+  "downloaded": {
+    "train_examples": 9427,
+    "test_examples": 3270,
+    "source": "google/boolq",
+    "dropped_train": 0,
+    "dropped_test": 0,
+    "dropped_test_overlap": 0,
+    "dropped_duplicate_rows": 0,
+    "dropped_label_conflicts": 0
+  },
+  "train_rows": 7427,
+  "calibration_rows": 2000,
+  "test_rows": 3270,
+  "train_shuffled_rows": 2228,
+  "train_shuffle_fraction": 0.3,
+  "calibration_shuffled_rows": 0,
+  "test_shuffled_rows": 0,
+  "train_row_order": "shuffled",
+  "calibration_row_order": "source_order",
+  "test_row_order": "source_order",
+  "types_train": {
+    "noul": 7427
+  },
+  "types_calibration": {
+    "noul": 2000
+  },
+  "types_test": {
+    "noul": 3270
+  },
+  "missing_calibration_types": [],
+  "duplicate_keys_train": 0,
+  "duplicate_keys_test": 0,
+  "test_ids_in_train": 0,
+  "test_ids_in_calibration": 0,
+  "files": {
+    "train": {
+      "path": "data/phase6/boolq/train.jsonl",
+      "rows": 7427,
+      "sha256": "10b6db393783e256a2969fac6b9d1a40df0df61011cf8c7e307304413b5b6087",
+      "bytes": 7035583
+    },
+    "calibration": {
+      "path": "data/phase6/boolq/calibration.jsonl",
+      "rows": 2000,
+      "sha256": "c656e5e99bcf67d5a2f688dd74927fb888d82354a5bd4f304e8ac30951973945",
+      "bytes": 1898103
+    },
+    "test": {
+      "path": "data/phase6/boolq/test.jsonl",
+      "rows": 3270,
+      "sha256": "417ddbeb164089692097dfca7a6a11d2f959dc30de0f00cee75d6118b586c2c7",
+      "bytes": 3108375
+    }
+  },
+  "one_hot_letter": true
+}

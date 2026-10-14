@@ -1,0 +1,55 @@
+{
+  "dataset": "multinli",
+  "model": "unsloth/gemma-4-E4B-it",
+  "lora": false,
+  "adapter_dir": null,
+  "padding_side": "right",
+  "padding_asserts": 19630,
+  "truncated": 0,
+  "prompt_sha256": "06bf695261cfc389a19f9b5b0476e0c9cb1d6384c98869068a6a49ea1d22b79b",
+  "index": "last_content",
+  "test_at_1": {
+    "n": 9815,
+    "correct": 7393,
+    "accuracy": 0.7532348446255731,
+    "ece": 0.18257153223121614,
+    "brier": 0.41908535715832795,
+    "by_type": {
+      "choice": {
+        "n": 9815,
+        "correct": 7393,
+        "accuracy": 0.7532348446255731,
+        "ece": 0.18257153223121614,
+        "brier": 0.41908535715832795
+      }
+    }
+  },
+  "flip": {
+    "n": 9815,
+    "changed": 1051,
+    "unchanged": 8764,
+    "change_rate": 0.10708099847172695
+  },
+  "temperature": {
+    "T": 1.0,
+    "fit": false,
+    "missing_types": [],
+    "calibration_types": []
+  },
+  "test_at_T": {
+    "n": 9815,
+    "correct": 7393,
+    "accuracy": 0.7532348446255731,
+    "ece": 0.18257153223121614,
+    "brier": 0.41908535715832795,
+    "by_type": {
+      "choice": {
+        "n": 9815,
+        "correct": 7393,
+        "accuracy": 0.7532348446255731,
+        "ece": 0.18257153223121614,
+        "brier": 0.41908535715832795
+      }
+    }
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "model": "google/gemma-4-E4B-it",
+  "lora": false,
+  "temperature": 1.0,
+  "padding_side": "left",
+  "prompt_matches_phase0": true,
+  "index_disagrees": 1228,
+  "phase0_recorded_correct": 752,
+  "shortcut_correct": 752,
+  "last_content_correct": 1289,
+  "shortcut": {
+    "n_questions": 2000,
+    "n_cases": 400,
+    "accuracy": 0.376,
+    "ece": 0.3658742327145903,
+    "brier": 0.9052791643922966,
+    "type": {
+      "choice": {
+        "n": 600,
+        "accuracy": 0.28833333333333333,
+        "ece": 0.3837299288292968,
+        "brier": 0.9710629279766656
+      },
+      "noul": {
+        "n": 600,
+        "accuracy": 0.5383333333333333,
+        "ece": 0.2943709414028854,
+        "brier": 0.7142528226240814
+      },
+      "score": {
+        "n": 800,
+        "accuracy": 0.32,
+        "ece": 0.4065345824166001,
+        "brier": 0.9992110980301808
+      }
+    },
+    "workflow": {
+      "agent_trace_observability": {
+        "n": 500,
+        "accuracy": 0.394,
+        "ece": 0.318197114200904,
+        "brier": 0.8733609842196376
+      },
+      "customer_service": {
+        "n": 500,
+        "accuracy": 0.288,
+        "ece": 0.48972804056541414,
+        "brier": 1.101034301909585
+      },
+      "invoice_processing": {
+        "n": 500,
+        "accuracy": 0.416,
+        "ece": 0.31813280914783937,
+        "brier": 0.838104096399887
+      },
+      "security_incidents": {
+        "n": 500,
+        "accuracy": 0.406,
+        "ece": 0.3390312374940785,
+        "brier": 0.8086172750400741
+      }
+    }
+  },
+  "last_content": {
+    "n_questions": 2000,
+    "n_cases": 400,
+    "accuracy": 0.6445,
+    "ece": 0.2624814863356488,
+    "brier": 0.5983526449027284,
+    "type": {
+      "choice": {
+        "n": 600,
+        "accuracy": 0.6316666666666667,
+        "ece": 0.3101861954761439,
+        "brier": 0.6402370154905843
+      },
+      "noul": {
+        "n": 600,
+        "accuracy": 0.7216666666666667,
+        "ece": 0.21434552797158546,
+        "brier": 0.48484701003231767
+      },
+      "score": {
+        "n": 800,
+        "accuracy": 0.59625,
+        "ece": 0.2752516483494362,
+        "brier": 0.6520685931146427
+      }
+    },
+    "workflow": {
+      "agent_trace_observability": {
+        "n": 500,
+        "accuracy": 0.516,
+        "ece": 0.3619827041251642,
+        "brier": 0.7820564608110933
+      },
+      "customer_service": {
+        "n": 500,
+        "accuracy": 0.75,
+        "ece": 0.20518661628035909,
+        "brier": 0.4451696858258762
+      },
+      "invoice_processing": {
+        "n": 500,
+        "accuracy": 0.646,
+        "ece": 0.21408963602276032,
+        "brier": 0.5709270115859243
+      },
+      "security_incidents": {
+        "n": 500,
+        "accuracy": 0.666,
+        "ece": 0.2835389846736539,
+        "brier": 0.5952574213880173
+      }
+    }
+  },
+  "shortcut_matches_phase0": true
+}

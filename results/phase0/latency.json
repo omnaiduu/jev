@@ -1,0 +1,96 @@
+{
+  "model": "google/gemma-4-E4B-it",
+  "gpu": "L40S",
+  "exam": "LocalLLaMA/typed-decisions",
+  "exam_split": "test",
+  "batch_size": 1,
+  "repeats": 3,
+  "thinking": false,
+  "container": "single_use_containers, scaledown_window 2 seconds, min_containers 0",
+  "no_decode": "One forward pass. The letter logits are the answer. No new tokens.",
+  "with_decode": "model.generate on the same prompt, max 64 new tokens, stops early on EOS.",
+  "forced_32": "Same prompt, exactly 32 new tokens, so a short paragraph has a clock.",
+  "cases": [
+    {
+      "name": "short",
+      "type": "noul",
+      "workflow": "agent_trace_observability",
+      "input_tokens": 176,
+      "no_decode_ms": 64.5,
+      "with_decode_ms": 130.7,
+      "decoded_tokens": 2,
+      "decode_text": "B",
+      "forced_32_ms": 1944.7,
+      "forced_32_tokens": 32,
+      "repeats_no_decode_ms": [
+        63.1,
+        64.5,
+        64.6
+      ],
+      "repeats_with_decode_ms": [
+        130.5,
+        130.7,
+        152.7
+      ],
+      "repeats_forced_32_ms": [
+        1944.7,
+        1931.0,
+        2168.4
+      ]
+    },
+    {
+      "name": "mid",
+      "type": "choice",
+      "workflow": "security_incidents",
+      "input_tokens": 375,
+      "no_decode_ms": 65.4,
+      "with_decode_ms": 134.0,
+      "decoded_tokens": 2,
+      "decode_text": "C",
+      "forced_32_ms": 1954.8,
+      "forced_32_tokens": 32,
+      "repeats_no_decode_ms": [
+        70.2,
+        64.0,
+        65.4
+      ],
+      "repeats_with_decode_ms": [
+        138.3,
+        128.5,
+        134.0
+      ],
+      "repeats_forced_32_ms": [
+        1927.5,
+        2000.1,
+        1954.8
+      ]
+    },
+    {
+      "name": "long",
+      "type": "choice",
+      "workflow": "customer_service",
+      "input_tokens": 685,
+      "no_decode_ms": 77.6,
+      "with_decode_ms": 143.5,
+      "decoded_tokens": 2,
+      "decode_text": "C",
+      "forced_32_ms": 2101.6,
+      "forced_32_tokens": 32,
+      "repeats_no_decode_ms": [
+        94.4,
+        77.6,
+        74.2
+      ],
+      "repeats_with_decode_ms": [
+        144.9,
+        143.5,
+        141.2
+      ],
+      "repeats_forced_32_ms": [
+        2007.6,
+        2190.7,
+        2101.6
+      ]
+    }
+  ]
+}
