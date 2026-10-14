@@ -3,19 +3,19 @@ import random
 
 import pytest
 
-from phase1.rows import validate_row as phase1_validate
-from phase2.prompts import render_user_prompt
-from phase6.meta import prompt_fingerprint
-from phase6.padding import assert_right_pad
-from phase6.report import (
+from core.rows import validate_row as phase1_validate
+from core.prompts import render_user_prompt
+from judge.meta import prompt_fingerprint
+from judge.padding import assert_right_pad
+from judge.report import (
     fit_dataset_temperature,
     keep_decision,
     keep_table,
     result_document,
 )
-from phase6.rows import make_row, reverse_options, shuffle_options
-from phase6.convert import banking_rows, typed_rows
-from phase6.splits import assert_disjoint, assemble_train_side, drop_duplicate_examples, hold_out_test
+from judge.rows import make_row, reverse_options, shuffle_options
+from judge.convert import banking_rows, typed_rows
+from judge.splits import assert_disjoint, assemble_train_side, drop_duplicate_examples, hold_out_test
 
 
 def test_phase1_still_rejects_typed_decisions():

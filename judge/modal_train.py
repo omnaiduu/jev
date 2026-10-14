@@ -16,9 +16,9 @@ from pathlib import Path
 
 import modal
 
-from phase2.loss import letter_cross_entropy, merge_every_25, text_only_names
-from phase6.collate import collate
-from phase6.meta import (
+from core.loss import letter_cross_entropy, merge_every_25, text_only_names
+from judge.collate import collate
+from judge.meta import (
     BATCH_SIZE,
     CHUNK_TRAIN_SECONDS,
     DATASETS,
@@ -28,7 +28,7 @@ from phase6.meta import (
     WARMUP_STEPS,
     prompt_fingerprint,
 )
-from phase6.modal_common import (
+from judge.modal_common import (
     adapter_dir,
     attach_new_lora,
     device_of,
@@ -50,7 +50,7 @@ image = (
         extra_options="--force-reinstall --no-deps",
         index_url="https://download.pytorch.org/whl/cu128",
     )
-    .add_local_python_source("phase0", "phase1", "phase2", "phase6")
+    .add_local_python_source("core", "judge")
 )
 for _dataset in DATASETS:
     image = image.add_local_file(

@@ -6,8 +6,8 @@ left-pads by default. Every row is checked before it can be scored or trained.
 
 from __future__ import annotations
 
-from phase2.prompts import LETTERS, render_prompt
-from phase6.padding import assert_right_pad
+from core.prompts import LETTERS, render_prompt
+from judge.padding import assert_right_pad
 
 
 def collate(tokenizer, rows: list[dict], letter_ids: dict[str, int], device, torch, max_length: int):

@@ -4,7 +4,7 @@ import pytest
 
 from phase1.assemble import assert_gate, assemble, manifest_for
 from phase1.open_data import banking_rows, boolq_rows, nli_rows
-from phase1.rows import NLI_OPTIONS, one_hot, shuffle_options
+from core.rows import NLI_OPTIONS, one_hot, shuffle_options
 from phase1.synthetic import (
     accept_passage,
     accept_refund,
@@ -120,7 +120,7 @@ def test_assemble_keeps_snli_out_and_shuffles_thirty_percent():
 
 
 def test_forbidden_source_is_rejected():
-    from phase1.rows import make_row
+    from core.rows import make_row
 
     with pytest.raises(ValueError):
         make_row("x", "typed-decisions", "noul", "state", "question", ["no", "yes"], [1.0, 0.0])

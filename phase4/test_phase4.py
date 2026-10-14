@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from phase4.score import (
+from core.score import (
     flip_item,
     flip_report,
     gate,
@@ -28,7 +28,7 @@ def _item():
 
 
 def test_left_pad_shortcut_is_the_first_content_token():
-    from phase4.score import last_content_index, phase0_index
+    from core.score import last_content_index, phase0_index
 
     mask = [0, 0, 1, 1, 1]
     assert phase0_index(mask) == 2

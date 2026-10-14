@@ -1,7 +1,7 @@
 """CPU checks for the Phase 0 formulas. No model and no exam data."""
 
-from phase0.items import iter_questions
-from phase0.metrics import accuracy, brier_score, expected_calibration_error, softmax
+from core.items import iter_questions
+from core.metrics import accuracy, brier_score, expected_calibration_error, softmax
 
 
 def test_softmax_is_a_distribution():
@@ -96,6 +96,6 @@ def test_multitoken_option_keeps_its_id_and_gets_one_letter():
 
 
 def render(item):
-    from phase0.items import render_user_prompt
+    from core.items import render_user_prompt
 
     return render_user_prompt(item)

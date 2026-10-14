@@ -14,10 +14,10 @@ from pathlib import Path
 
 from datasets import load_dataset
 
-from phase6.convert import banking_rows, boolq_rows, nli_rows, typed_rows
-from phase6.meta import CALIBRATION_N, DATASETS, LABEL_SOURCE, SEED, prompt_fingerprint
-from phase6.rows import example_key
-from phase6.splits import (
+from judge.convert import banking_rows, boolq_rows, nli_rows, typed_rows
+from judge.meta import CALIBRATION_N, DATASETS, LABEL_SOURCE, SEED, prompt_fingerprint
+from judge.rows import example_key
+from judge.splits import (
     assert_disjoint,
     coverage,
     prepare_train_side,

@@ -17,14 +17,31 @@ Each count is correct answers on rows the adapter did not train on. The first co
 
 Banking77 shows 20 intents on each row, not 77. The typed-decisions before-count on this prompt is 1,219 / 2,000. SNLI was not trained on. With the MultiNLI adapter it is 6,140 / 9,842, then 8,909 / 9,842. That score does not decide whether the MultiNLI adapter is kept.
 
-The keep file is `results/phase6/keep.json`. The checks are `phase6/test_phase6.py`.
+The keep file is `results/phase6/keep.json`.
 
-## What is in this repo
+## Where to read the code
 
-- `phase0` through `phase6` is the code for each stage.
-- `results/phase6` holds the scores.
-- `PROTOCOL.md` is why each dataset has its own adapter.
-- `LEARNING.md` is why the readout is a letter.
-- `posts/phase6-per-dataset/insights.md` is the measured argument.
+Start with `judge/`. That is the run behind the table: one adapter per dataset, the prompt, the keep rule.
 
-The older mixed-adapter comparison is not this result. Do not read 752 / 2,000 to 941 / 2,000, or 1,289 / 2,000 to 1,572 / 2,000, as the effect of these four adapters.
+`core/` is the shared code.
+
+- `core/prompts.py` is the prompt. The letter is the slot. The words stay in the prompt.
+- `core/loss.py` is the loss on those letters.
+- `core/metrics.py` is accuracy, calibration error, and Brier score.
+- `core/fit.py` fits one temperature per dataset.
+- `core/score.py` reads the letter scores.
+
+`phase0` to `phase5` are the earlier runs. They call `core`. The table above is not those runs.
+
+`PROTOCOL.md` is why each dataset has its own adapter. `LEARNING.md` is the design. `posts/phase6-per-dataset/insights.md` is the measured argument.
+
+## Checks
+
+```bash
+pip install -r requirements.txt
+pytest judge/test_judge.py phase0/test_metrics.py phase1/test_phase1.py phase2/test_phase2.py phase3/test_phase3.py phase4/test_phase4.py phase5/test_phase5.py
+```
+
+These checks do not need a GPU. Training runs on Modal, and that image installs its own torch.
+
+The `.jsonl` row files are not in git. The scores are the `.json` files under `results/phase6/`. Rebuild the rows with `judge/build.py` if you need them.

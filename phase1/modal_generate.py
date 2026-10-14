@@ -30,7 +30,7 @@ image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install("torch", index_url="https://download.pytorch.org/whl/cu128")
     .pip_install("transformers==5.18.0", "accelerate", "safetensors")
-    .add_local_python_source("phase1")
+    .add_local_python_source("phase1", "core")
 )
 cache = modal.Volume.from_name("phase1-hf-cache", create_if_missing=True)
 app = modal.App(APP_NAME)

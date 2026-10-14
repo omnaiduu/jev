@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 
-from phase0.metrics import accuracy, brier_score, expected_calibration_error, softmax
+from core.metrics import accuracy, brier_score, expected_calibration_error, softmax
 
 # The plan's examples, plus the steps between them. T = 1 is the unscaled model.
 GRID = [round(0.5 + index * 0.05, 2) for index in range(51)]

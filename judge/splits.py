@@ -10,8 +10,8 @@ from __future__ import annotations
 import random
 from collections import Counter, defaultdict
 
-from phase6.meta import SHUFFLE_FRACTION
-from phase6.rows import example_key, shuffle_options, validate_row
+from judge.meta import SHUFFLE_FRACTION
+from judge.rows import example_key, shuffle_options, validate_row
 
 
 def _groups(rows: list[dict]) -> tuple[list[str], dict[str, int]]:

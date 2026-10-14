@@ -12,10 +12,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from phase0.metrics import accuracy, brier_score, expected_calibration_error
-from phase3.fit import fit_temperature
-from phase4.score import readout
-from phase6.meta import DATASETS, TEACHER_CEILING_CORRECT, TEACHER_CEILING_N
+from core.metrics import accuracy, brier_score, expected_calibration_error
+from core.fit import fit_temperature
+from core.score import readout
+from judge.meta import DATASETS, TEACHER_CEILING_CORRECT, TEACHER_CEILING_N
 
 
 def summarize(records: list[dict]) -> dict:

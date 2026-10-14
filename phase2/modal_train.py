@@ -13,8 +13,8 @@ from pathlib import Path
 
 import modal
 
-from phase2.loss import letter_cross_entropy, merge_every_25, text_only_names
-from phase2.prompts import LETTERS, render_prompt
+from core.loss import letter_cross_entropy, merge_every_25, text_only_names
+from core.prompts import LETTERS, render_prompt
 
 APP_NAME = "phase2-lora-train"
 MODEL_ID = "unsloth/gemma-4-E4B-it"
@@ -38,7 +38,7 @@ image = (
         extra_options="--force-reinstall --no-deps",
         index_url="https://download.pytorch.org/whl/cu128",
     )
-    .add_local_python_source("phase2")
+    .add_local_python_source("core")
     .add_local_file("data/phase1/train.jsonl", remote_path="/data/train.jsonl")
 )
 cache = modal.Volume.from_name("phase2-hf-cache", create_if_missing=True)

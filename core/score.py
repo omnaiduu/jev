@@ -7,8 +7,8 @@ and rebinds the letters. The comparison is by option id.
 
 from __future__ import annotations
 
-from phase0.items import LETTERS
-from phase0.metrics import accuracy, brier_score, expected_calibration_error, softmax
+from core.items import LETTERS
+from core.metrics import accuracy, brier_score, expected_calibration_error, softmax
 
 # Recorded Phase 3 fit. score is absent from that file.
 PHASE3_TEMPERATURES = {"noul": 1.65, "choice": 1.3}

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from phase6.meta import DATASETS, MAX_LENGTH, MODEL_ID, RANK, RETIRED_ADAPTER_DIRS
+from judge.meta import DATASETS, MAX_LENGTH, MODEL_ID, RANK, RETIRED_ADAPTER_DIRS
 
 
 def adapter_dir(dataset: str) -> Path:
@@ -93,7 +93,7 @@ def device_of(model, torch):
 
 
 def letter_ids(tokenizer) -> dict[str, int]:
-    from phase2.prompts import LETTERS
+    from core.prompts import LETTERS
 
     mapping = {}
     for letter in LETTERS:

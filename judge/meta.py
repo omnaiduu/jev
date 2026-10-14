@@ -1,7 +1,7 @@
 """Frozen constants for the per-dataset runs.
 
 The prompt hash is the Phase 2 system line plus one rendered user message.
-Train and test both call phase2.prompts.render_prompt, so this hash is the
+Train and test both call core.prompts.render_prompt, so this hash is the
 check that those calls still build `A. {option text}`.
 """
 
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import hashlib
 
-from phase2.prompts import SYSTEM_PROMPT, render_user_prompt
+from core.prompts import SYSTEM_PROMPT, render_user_prompt
 
 DATASETS = ("boolq", "multinli", "banking77", "typed-decisions")
 CALIBRATION_N = 2000

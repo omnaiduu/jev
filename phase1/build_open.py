@@ -16,7 +16,7 @@ from phase1.open_data import (
     boolq_rows,
     nli_rows,
 )
-from phase1.rows import NLI_OPTIONS
+from core.rows import NLI_OPTIONS
 
 POOL_DIR = Path("data/phase1/pool")
 

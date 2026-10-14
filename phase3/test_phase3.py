@@ -1,4 +1,4 @@
-from phase3.fit import assert_calibration_row, fit_temperature, nll_at_temperature, winning_index
+from core.fit import assert_calibration_row, fit_temperature, nll_at_temperature, winning_index
 
 
 def test_temperature_does_not_change_the_winner():

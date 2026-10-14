@@ -12,7 +12,7 @@ from pathlib import Path
 
 import modal
 
-from phase0.items import SYSTEM_PROMPT, iter_questions, render_user_prompt
+from core.items import SYSTEM_PROMPT, iter_questions, render_user_prompt
 from phase0.modal_baseline import EXAM, EXAM_CONFIG, EXAM_SPLIT, MODEL_ID, image
 
 APP_NAME = "phase0-latency-check"

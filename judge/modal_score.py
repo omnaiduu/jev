@@ -13,10 +13,10 @@ from pathlib import Path
 
 import modal
 
-from phase2.loss import text_only_names
-from phase6.collate import collate
-from phase6.meta import BATCH_SIZE, DATASETS, MAX_LENGTH, MODEL_ID, prompt_fingerprint
-from phase6.modal_common import (
+from core.loss import text_only_names
+from judge.collate import collate
+from judge.meta import BATCH_SIZE, DATASETS, MAX_LENGTH, MODEL_ID, prompt_fingerprint
+from judge.modal_common import (
     adapter_dir,
     attach_new_lora,
     device_of,
@@ -25,8 +25,8 @@ from phase6.modal_common import (
     letter_ids,
     tokenizer_of,
 )
-from phase6.report import document_at_temperature, result_document
-from phase6.rows import reverse_options
+from judge.report import document_at_temperature, result_document
+from judge.rows import reverse_options
 
 APP_NAME = "phase6-score"
 
@@ -40,7 +40,7 @@ image = (
         extra_options="--force-reinstall --no-deps",
         index_url="https://download.pytorch.org/whl/cu128",
     )
-    .add_local_python_source("phase0", "phase1", "phase2", "phase3", "phase4", "phase6")
+    .add_local_python_source("core", "judge")
 )
 for _dataset in DATASETS:
     image = (

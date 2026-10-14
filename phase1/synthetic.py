@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import random
 
-from phase1.rows import TEAM_OPTIONS, YES_NO, contains_word, make_row, one_hot
+from core.rows import TEAM_OPTIONS, YES_NO, contains_word, make_row, one_hot
 
 REFUND_SCENARIOS = [
     ("billing", "charged twice", "The customer was charged twice for one order and wants the extra payment returned."),

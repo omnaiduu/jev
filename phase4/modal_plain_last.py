@@ -12,8 +12,8 @@ from pathlib import Path
 
 import modal
 
-from phase0.items import SYSTEM_PROMPT, iter_questions, render_user_prompt
-from phase4.score import last_content_index, phase0_index, readout, summarize_records
+from core.items import SYSTEM_PROMPT, iter_questions, render_user_prompt
+from core.score import last_content_index, phase0_index, readout, summarize_records
 
 APP_NAME = "phase4-plain-last-token"
 MODEL_ID = "google/gemma-4-E4B-it"
@@ -26,7 +26,7 @@ image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install("torch", index_url="https://download.pytorch.org/whl/cu128")
     .pip_install("transformers==5.18.0", "datasets", "accelerate", "safetensors")
-    .add_local_python_source("phase0", "phase4")
+    .add_local_python_source("core")
     .add_local_file("results/phase0/baseline.json", remote_path="/baseline.json")
 )
 cache = modal.Volume.from_name("phase0-hf-cache", create_if_missing=True)

@@ -12,9 +12,9 @@ import json
 import random
 from typing import Any
 
-from phase0.items import option_pairs
-from phase1.rows import NLI_OPTIONS, YES_NO
-from phase6.rows import make_row, one_hot
+from core.items import option_pairs
+from core.rows import NLI_OPTIONS, YES_NO
+from judge.rows import make_row, one_hot
 
 BANKING_OPTIONS = 20
 

@@ -13,7 +13,7 @@ import random
 from collections import Counter
 from pathlib import Path
 
-from phase1.rows import make_row, one_hot, shuffle_options
+from core.rows import make_row, one_hot, shuffle_options
 from phase1.synthetic import FACTS
 
 LEVELS = ["0: none", "1: low", "2: medium", "3: high"]

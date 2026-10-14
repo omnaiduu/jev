@@ -1,0 +1,5 @@
+# Local checks. No GPU.
+pytest>=8
+
+# Rebuild the dataset files. The .jsonl rows are not in git.
+datasets>=2.18

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import random
 
-from phase1.rows import NLI_OPTIONS, YES_NO, make_row, one_hot
+from core.rows import NLI_OPTIONS, YES_NO, make_row, one_hot
 
 BANKING_OPTIONS = 20
 MULTINLI_TRAIN = 23000

@@ -10,7 +10,7 @@ import random
 from collections import defaultdict
 from pathlib import Path
 
-from phase1.rows import FORBIDDEN_SOURCES, shuffle_options, validate_row
+from core.rows import FORBIDDEN_SOURCES, shuffle_options, validate_row
 
 CALIBRATION_N = 4000
 SHUFFLE_FRACTION = 0.30

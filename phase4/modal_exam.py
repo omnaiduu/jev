@@ -11,10 +11,10 @@ from pathlib import Path
 
 import modal
 
-from phase0.items import LETTERS, SYSTEM_PROMPT, iter_questions, render_user_prompt
-from phase2.loss import text_only_names
-from phase2.prompts import render_prompt
-from phase4.score import (
+from core.items import LETTERS, SYSTEM_PROMPT, iter_questions, render_user_prompt
+from core.loss import text_only_names
+from core.prompts import render_prompt
+from core.score import (
     flip_item,
     flip_report,
     gate,
@@ -47,7 +47,7 @@ image = (
         index_url="https://download.pytorch.org/whl/cu128",
     )
     .pip_install("datasets")
-    .add_local_python_source("phase0", "phase2", "phase4")
+    .add_local_python_source("core")
     .add_local_file("results/phase0/baseline.json", remote_path="/baseline.json")
     .add_local_file("results/phase3/temperature.json", remote_path="/temperature.json")
     .add_local_file("data/phase1/held_out.jsonl", remote_path="/data/held_out.jsonl")

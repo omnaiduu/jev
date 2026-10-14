@@ -1,6 +1,5 @@
 
 __pycache__/
 *.pyc
+*.jsonl
 data/phase1/pool/
-# Official MultiNLI train is about 260MB. The manifest records its sha256.
-data/phase6/multinli/train.jsonl

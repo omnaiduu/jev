@@ -11,9 +11,9 @@ from pathlib import Path
 
 import modal
 
-from phase2.loss import text_only_names
-from phase2.prompts import LETTERS, render_prompt
-from phase3.fit import GRID, assert_calibration_row, fit_temperature
+from core.loss import text_only_names
+from core.prompts import LETTERS, render_prompt
+from core.fit import GRID, assert_calibration_row, fit_temperature
 
 APP_NAME = "phase3-temperature"
 MODEL_ID = "unsloth/gemma-4-E4B-it"
@@ -31,7 +31,7 @@ image = (
         extra_options="--force-reinstall --no-deps",
         index_url="https://download.pytorch.org/whl/cu128",
     )
-    .add_local_python_source("phase0", "phase2", "phase3")
+    .add_local_python_source("core")
     .add_local_file("data/phase1/calibration.jsonl", remote_path="/data/calibration.jsonl")
 )
 cache = modal.Volume.from_name("phase2-hf-cache", create_if_missing=True)

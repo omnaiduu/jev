@@ -1,5 +1,5 @@
-from phase2.loss import merge_every_25, nll, text_only_names
-from phase2.prompts import render_user_prompt
+from core.loss import merge_every_25, nll, text_only_names
+from core.prompts import render_user_prompt
 
 
 def test_prompt_binds_letters_in_row_order():
