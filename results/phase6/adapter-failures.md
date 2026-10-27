@@ -1,6 +1,6 @@
 # Adapter failures
 
-This CSV is the test questions the model got wrong after training. One row is one missed question. Right answers are not in the file.
+This CSV is the test questions the model got wrong after training. One row is one missed question. A question the trained model got right is left out. The correct answer for each missed question is still on the row, in `label` and `label_text`.
 
 1,675 rows: BoolQ 298, Banking77 118, MultiNLI 831, typed-decisions 428.
 
@@ -24,8 +24,8 @@ These match the published totals. BoolQ was 2,972 right out of 3,270, so 298 mis
 | question | The question. |
 | state | The passage or customer message. |
 | options | The choices, listed as A, B, C. On BoolQ, A is no and B is yes. |
-| label | The stored right answer. |
-| label_text | That answer in words. On BoolQ both say yes or no. On Banking77, `label` is the code and `label_text` is the words. |
+| label | The correct answer, as a short code. Examples: `yes`, `card_arrival`, `continue`. |
+| label_text | The same correct answer, in the words the model saw. BoolQ: `yes` stays `yes`. Banking77: `card_arrival` becomes `card arrival`. typed-decisions: `continue` becomes `Let the agent proceed without interruption.` |
 | plain_answer | Answer code before training. |
 | plain_answer_text | That answer in words. |
 | plain_letter | Letter picked before training. A is the first choice. |
